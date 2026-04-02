@@ -53,5 +53,6 @@ func (lm *limitManyRequests[T]) Do(key string, fn func() (T, error)) (T, error) 
 		return v, err
 	}
 	l.Send(v)
+	delete(lm.content, key)
 	return v, nil
 }
