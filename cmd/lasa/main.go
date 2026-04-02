@@ -2,8 +2,12 @@ package main
 
 import (
 	"flag"
+	"net"
+	"net/http"
 
+	"tangled.org/anhgelus.world/lasa"
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
+	"tangled.org/anhgelus.world/xrpc"
 )
 
 var (
@@ -18,6 +22,8 @@ var commands = []internal.Command{
 	{Name: "publication", Usage: "works with publication", Callback: handlePublication},
 }
 
+var client xrpc.Client
+
 func main() {
 	flag.Parse()
 	args := flag.Args()
@@ -25,6 +31,7 @@ func main() {
 		handleHelp()
 		return
 	}
+	client = lasa.NewClient(http.DefaultClient, net.DefaultResolver, nil, 0)
 	command := args[0]
 	var next []string
 	if len(args) > 1 {
@@ -49,21 +56,4 @@ func handleHelp() {
 			"lasa publication anhgelus.world\t-\tdisplay publications of anhgelus.world",
 		},
 	)
-}
-
-func handlePublication(args []string) {
-	if len(args) == 0 {
-		internal.Usage(
-			`lasa publication <identifier> [rkey]`,
-			`List publications of identifier (can be a DID or an Handle) or display a specific publication referenced by its rkey`,
-			nil,
-			nil,
-			[]string{
-				"lasa publication anhgelus.world\t-\tdisplay publications of anhgelus.world",
-				"lasa publication did:plc:123\t-\tdisplay publications of did:plc:123",
-				"lasa publication did:web:example.org fooBar\t-\tdisplay publication of did:web:example.org referenced by fooBar",
-			},
-		)
-		return
-	}
 }
