@@ -17,10 +17,12 @@ type Directory struct {
 	limiter  *limitManyRequests[*atproto.DIDDocument]
 }
 
-func NewDirectory(dir atproto.Directory, cache valkey.Client) *Directory {
+func NewDirectory(dir atproto.Directory, cache valkey.Client, dur time.Duration) *Directory {
 	return &Directory{
-		inner: dir,
-		cache: cache,
+		inner:    dir,
+		cache:    cache,
+		limiter:  newLimitManyRequests[*atproto.DIDDocument](),
+		duration: dur,
 	}
 }
 
@@ -68,7 +70,7 @@ func (d *Directory) ResolveHandle(ctx context.Context, h atproto.Handle) (*atpro
 	if doc != nil {
 		return doc, nil
 	}
-	slog.Debug("cannot get DIDDocument from cache")
+	slog.Debug("cannot get DIDDocument from cache, requesting")
 
 	return d.limiter.Do(key, func() (*atproto.DIDDocument, error) {
 		doc, err := d.inner.ResolveHandle(ctx, h)
@@ -86,7 +88,7 @@ func (d *Directory) ResolveDID(ctx context.Context, did *atproto.DID) (*atproto.
 	if doc != nil {
 		return doc, nil
 	}
-	slog.Debug("cannot get DIDDocument from cache")
+	slog.Debug("cannot get DIDDocument from cache, requesting")
 
 	return d.limiter.Do(key, func() (*atproto.DIDDocument, error) {
 		doc, err := d.inner.ResolveDID(ctx, did)

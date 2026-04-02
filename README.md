@@ -30,3 +30,5 @@ just build
 ```
 
 `build/lasad` is the daemon running the web server.
+
+`build/lasa` is a CLI.
