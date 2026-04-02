@@ -66,4 +66,12 @@ func handlePublicationSpecific(did *atproto.DID, args []string) {
 		panic(err)
 	}
 	internal.DisplayPublication(context.Background(), client, did, pub.URI, pub.Value)
+	docs, err := lasa.ListDocuments(context.Background(), client, did, pub.URI)
+	if err != nil {
+		panic(err)
+	}
+	for _, doc := range docs {
+		internal.DisplayDocument(context.Background(), client, did, doc.URI, pub.Value, doc.Value)
+		fmt.Println("-----------------------------")
+	}
 }
