@@ -17,7 +17,7 @@ func Usage(syntax, usage string, commands []Command, flags *flag.FlagSet, exampl
 	fmt.Println("Usage:", syntax)
 	fmt.Println(usage)
 	w := tabwriter.NewWriter(os.Stdout, 0, 2, 1, ' ', 0)
-	if commands != nil {
+	if len(commands) > 0 {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Commands:")
 		for _, c := range commands {

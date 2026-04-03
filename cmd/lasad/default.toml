@@ -1,0 +1,15 @@
+domain = "example.org"
+port = 8000
+
+# if you are using valkey
+#[cache]
+#host = "localhost"
+#port = 6379
+#db = 0
+#duration = 60 # cache duration in minutes
+
+# if valkey requires auth
+#[cache.auth]
+#username = ""
+#password = ""
+#client_name = ""

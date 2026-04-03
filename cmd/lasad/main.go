@@ -22,10 +22,15 @@ func init() {
 
 var commands = []internal.Command{
 	{Name: "run", Usage: "run the daemon", Callback: handleRun},
+	{Name: "gen-config", Usage: "generate the config file", Callback: handleGenConfig},
 }
 
 func main() {
 	flags.Parse(os.Args[1:])
+	if help {
+		handleHelp()
+		return
+	}
 	args := flags.Args()
 	command := "run"
 	if len(args) > 0 {
@@ -43,15 +48,15 @@ func main() {
 			return
 		}
 	}
-	handleHelp(args)
+	handleHelp()
 	os.Exit(1)
 }
 
-func handleHelp([]string) {
+func handleHelp() {
 	internal.Usage(
 		`lasad <command>`,
 		`Daemon running Lasa.`,
-		nil,
+		commands,
 		flags,
 		[]string{
 			"lasad\t-\trun the daemon",

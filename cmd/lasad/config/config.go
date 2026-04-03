@@ -50,5 +50,5 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	var cfg Config
-	return &cfg, toml.Unmarshal(b, cfg)
+	return &cfg, toml.Unmarshal(b, &cfg)
 }
