@@ -42,3 +42,5 @@ Run `lasad -h` to get the help.
 
 `build/lasa` is a CLI.
 Run `lasa -h` to get the help.
+
+You must have **scdoc** installed to build the man pages.
