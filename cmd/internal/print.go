@@ -28,7 +28,7 @@ func Usage(syntax, usage string, commands []Command, flags *flag.FlagSet, exampl
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Options:")
 		flags.VisitAll(func(f *flag.Flag) {
-			fmt.Fprintln(w, "\t-", f.Name, "\t", f.Usage, "\t(default:", f.DefValue, ")")
+			fmt.Fprintln(w, "\t-"+f.Name, "\t", f.Usage, "\t(default:", f.DefValue+")")
 		})
 	}
 	fmt.Fprintln(w)

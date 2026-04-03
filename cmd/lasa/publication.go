@@ -17,7 +17,7 @@ func handlePublicationUsage() {
 		`lasa publication <identifier> [rkey]`,
 		`List publications of identifier (can be a DID or an Handle) or display a specific publication referenced by its rkey`,
 		nil,
-		nil,
+		flags,
 		[]string{
 			"lasa publication anhgelus.world\t-\tdisplay publications of anhgelus.world",
 			"lasa publication did:plc:123\t-\tdisplay publications of did:plc:123",
@@ -30,7 +30,7 @@ func handlePublicationUsage() {
 }
 
 func handlePublication(args []string) {
-	if len(args) == 0 {
+	if len(args) == 0 || help {
 		handlePublicationUsage()
 		return
 	}

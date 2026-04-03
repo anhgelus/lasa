@@ -1,4 +1,10 @@
-build: build-lasa
+builder := 'go build -ldflags "-s -w"'
+
+build: build-lasa build-lasad
 
 build-lasa:
-    go build -ldflags "-s -w" -o build/lasa ./cmd/lasa/
+    {{builder}} -o build/lasa ./cmd/lasa/
+
+build-lasad:
+    {{builder}} -o build/lasad ./cmd/lasad/
+

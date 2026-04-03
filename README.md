@@ -1,6 +1,6 @@
 # Lasa
 
-Lasa is stateless proxy that generates an RSS/Atom feed from a [Standard.site](https://Standard.site) publication.
+Lasa is stateless proxy that generates a RSS or an Atom feed from a [Standard.site](https://standard.site) publication.
 
 ## Usage
 

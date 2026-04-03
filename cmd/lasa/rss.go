@@ -16,7 +16,7 @@ func handleRSSUsage() {
 		`lasa rss <identifier> <rkey>`,
 		`Generate the RSS for the given publication.`,
 		nil,
-		nil,
+		flags,
 		[]string{
 			"lasa publication did:web:example.org fooBar\t-\tgenerate RSS publication of did:web:example.org referenced by fooBar",
 		},
@@ -27,7 +27,7 @@ func handleRSSUsage() {
 }
 
 func handleRSS(args []string) {
-	if len(args) != 2 {
+	if len(args) != 2 || help {
 		handleRSSUsage()
 		return
 	}

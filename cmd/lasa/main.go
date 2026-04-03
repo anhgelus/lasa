@@ -12,11 +12,13 @@ import (
 )
 
 var (
-	help bool
+	flags *flag.FlagSet
+	help  bool
 )
 
 func init() {
-	flag.BoolVar(&help, "h", false, "show the help")
+	flags = flag.NewFlagSet("default", flag.PanicOnError)
+	flags.BoolVar(&help, "h", false, "show the help")
 }
 
 var commands = []internal.Command{
@@ -27,10 +29,10 @@ var commands = []internal.Command{
 var client xrpc.Client
 
 func main() {
-	flag.Parse()
-	args := flag.Args()
+	flags.Parse(os.Args[1:])
+	args := flags.Args()
 	if len(args) == 0 {
-		handleHelp(nil)
+		handleHelp()
 		return
 	}
 	client = lasa.NewClient(http.DefaultClient, net.DefaultResolver, nil, 0)
@@ -41,20 +43,22 @@ func main() {
 	}
 	for _, c := range commands {
 		if c.Name == command {
+			flags.Parse(next)
+			next = flags.Args()
 			c.Callback(next)
 			return
 		}
 	}
-	handleHelp(next)
+	handleHelp()
 	os.Exit(1)
 }
 
-func handleHelp([]string) {
+func handleHelp() {
 	internal.Usage(
 		`lasa <command>`,
 		`Lasa is a CLI tool.`,
 		commands,
-		nil,
+		flags,
 		[]string{
 			"lasa publication anhgelus.world\t-\tdisplay publications of anhgelus.world",
 		},
