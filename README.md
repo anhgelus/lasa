@@ -30,5 +30,7 @@ just build
 ```
 
 `build/lasad` is the daemon running the web server.
+Run `lasad -h` to get the help.
 
 `build/lasa` is a CLI.
+Run `lasa -h` to get the help.

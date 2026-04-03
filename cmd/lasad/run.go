@@ -2,15 +2,23 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/valkey-io/valkey-go"
+	site "tangled.org/anhgelus.world/goat-site"
+	"tangled.org/anhgelus.world/lasa"
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
 	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
+	"tangled.org/anhgelus.world/xrpc"
+	"tangled.org/anhgelus.world/xrpc/atproto"
 )
 
 func handleRunHelp() {
@@ -43,7 +51,52 @@ func handleRun(args []string) {
 	}
 	ctx = context.WithValue(ctx, keyCfg, cfg)
 
+	var cache valkey.Client
+	var dur time.Duration
+	if cfg.Cache != nil {
+		cache, err = cfg.Cache.Connect()
+		if err != nil {
+			panic(err)
+		}
+		dur = time.Duration(cfg.Cache.Duration) * time.Minute
+	}
+	client := lasa.NewClient(http.DefaultClient, net.DefaultResolver, cache, dur, cfg.Domain)
+	ctx = context.WithValue(ctx, keyClient, client)
+
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /{id}/{rkey}/rss", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		client := ctx.Value(keyClient).(xrpc.Client)
+		did, err := lasa.Resolve(ctx, client.Directory(), r.PathValue("id"))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		rkey, err := atproto.ParseRecordKey(r.PathValue("rkey"))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		pub, err := xrpc.GetRecord[*site.Publication](ctx, client, did, rkey, nil)
+		if err != nil {
+			if err, ok := errors.AsType[xrpc.ErrStandardResponse](err); ok {
+				if errors.Is(err, xrpc.ErrRecordNotFound) {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				panic(err)
+			} else {
+				panic(err)
+			}
+		}
+		w.Header().Set("Content-Type", "application/rss+xml")
+		err = lasa.GenerateRSS(ctx, client, w, did, pub)
+		if err != nil {
+			panic(err)
+		}
+	})
+	mux.HandleFunc("GET /{id}/{$}", func(w http.ResponseWriter, r *http.Request) {
+	})
 
 	ch := make(chan error, 1)
 

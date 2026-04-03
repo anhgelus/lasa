@@ -3,9 +3,10 @@ package lasa
 import (
 	"context"
 	"embed"
-	"html/template"
+	"html"
 	"io"
 	"reflect"
+	"text/template"
 	"time"
 
 	site "tangled.org/anhgelus.world/goat-site"
@@ -54,9 +55,9 @@ func GenerateRSS(
 		return ErrCannotGenerateRSS{"description is not set"}
 	}
 	data := RSSData{
-		Title:       pub.Value.Name,
+		Title:       html.EscapeString(pub.Value.Name),
 		Link:        pub.Value.URL.String(),
-		Description: *pub.Value.Description,
+		Description: html.EscapeString(*pub.Value.Description),
 	}
 	items, err := ListDocuments(ctx, client, author, pub.URI)
 	if err != nil {
@@ -77,9 +78,12 @@ func GenerateRSS(
 			return ErrCannotGenerateRSS{"path is not set for " + item.Value.Title}
 		}
 		url.Path = *item.Value.Path
+		for i, v := range item.Value.Tags {
+			item.Value.Tags[i] = html.EscapeString(v)
+		}
 		d := RSSItem{
 			Link:       url.String(),
-			Title:      item.Value.Title,
+			Title:      html.EscapeString(item.Value.Title),
 			PubDate:    item.Value.PublishedAt.Format(time.RFC1123),
 			Categories: item.Value.Tags,
 		}
@@ -87,7 +91,7 @@ func GenerateRSS(
 			d.Author = "@" + handle.String()
 		}
 		if item.Value.Description != nil {
-			d.Description = *item.Value.Description
+			d.Description = html.EscapeString(*item.Value.Description)
 		}
 		data.Items[i] = d
 	}

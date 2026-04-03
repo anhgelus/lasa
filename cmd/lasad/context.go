@@ -4,4 +4,5 @@ type Key uint
 
 const (
 	keyCfg = iota
+	keyClient
 )

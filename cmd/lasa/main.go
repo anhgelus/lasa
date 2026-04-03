@@ -35,7 +35,7 @@ func main() {
 		handleHelp()
 		return
 	}
-	client = lasa.NewClient(http.DefaultClient, net.DefaultResolver, nil, 0)
+	client = lasa.NewClient(http.DefaultClient, net.DefaultResolver, nil, 0, "local")
 	command := args[0]
 	var next []string
 	if len(args) > 1 {
