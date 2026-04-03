@@ -53,6 +53,8 @@ func (lm *limitManyRequests[T]) Do(key string, fn func() (T, error)) (T, error) 
 		return v, err
 	}
 	l.Send(v)
+	lm.mu.Lock()
 	delete(lm.content, key)
+	lm.mu.Unlock()
 	return v, nil
 }
