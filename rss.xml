@@ -5,7 +5,7 @@
         <link>{{ .Link }}</link>
         <description>{{ .Description }}</description>
         <docs>https://www.rssboard.org/rss-specification</docs>
-        <generator>Lasa</generator>
+        <generator>Lasa v0.1.0</generator>
         {{ if isSet .LastBuildDate -}}
             <lastBuildDate>{{ .LastBuildDate }}</lastBuildDate>
         {{- end }}
