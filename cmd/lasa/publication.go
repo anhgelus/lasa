@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	site "tangled.org/anhgelus.world/goat-site"
 	"tangled.org/anhgelus.world/lasa"
@@ -23,6 +24,9 @@ func handlePublicationUsage() {
 			"lasa publication did:web:example.org fooBar\t-\tdisplay publication of did:web:example.org referenced by fooBar",
 		},
 	)
+	if !help {
+		os.Exit(1)
+	}
 }
 
 func handlePublication(args []string) {

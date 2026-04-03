@@ -4,6 +4,7 @@ import (
 	"flag"
 	"net"
 	"net/http"
+	"os"
 
 	"tangled.org/anhgelus.world/lasa"
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
@@ -19,7 +20,7 @@ func init() {
 }
 
 var commands = []internal.Command{
-	{Name: "publication", Usage: "works with publication", Callback: handlePublication},
+	{Name: "publication", Usage: "display publications", Callback: handlePublication},
 }
 
 var client xrpc.Client
@@ -27,8 +28,8 @@ var client xrpc.Client
 func main() {
 	flag.Parse()
 	args := flag.Args()
-	if len(args) == 0 || help {
-		handleHelp()
+	if len(args) == 0 {
+		handleHelp(nil)
 		return
 	}
 	client = lasa.NewClient(http.DefaultClient, net.DefaultResolver, nil, 0)
@@ -43,10 +44,11 @@ func main() {
 			return
 		}
 	}
-	handleHelp()
+	handleHelp(next)
+	os.Exit(1)
 }
 
-func handleHelp() {
+func handleHelp([]string) {
 	internal.Usage(
 		`lasa <command>`,
 		`Lasa is a CLI tool.`,

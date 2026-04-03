@@ -15,7 +15,7 @@ import (
 func NewClient(client *http.Client, resolver *net.Resolver, cache valkey.Client, dur time.Duration) xrpc.Client {
 	client.Timeout = 30 * time.Second
 	dir := NewDirectory(atproto.NewDirectory(client, resolver), cache, dur)
-	return xrpc.NewClient(client, dir)
+	return xrpc.NewClient(client, dir, "Lasa/v0.1.0 (Linux; +https://tangled.org/anhgelus.world/lasa)")
 }
 
 func ListDocuments(
