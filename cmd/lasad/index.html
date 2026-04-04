@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lasa</title>
+    <style>
+        :root {
+            font-size: 18px;
+        }
+        body {
+            margin: 0;
+            padding-bottom: 4rem;
+            font-family: system-ui, Inter, sans-serif;
+            line-height: 1.6em;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        body > * {
+            display: block;
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 { 
+            line-height: 1.6em; 
+            margin-top: 2rem;
+        }
+        h1 { 
+            text-align: center; 
+        }
+        code {
+            font-family: monospace;
+            font-size: 0.9em;
+            letter-spacing: -0.2px;
+        }
+        a {
+            color: #023e8a;
+            padding: 0.1em;
+        }
+        a:hover {
+            background: #023e8a;
+            color: white;
+        }
+
+        @media only screen and (prefers-color-scheme: dark) {
+            :root {
+                color: #f0ebd8;
+                background-color: #0d1321;
+            }
+            a {
+                color: #90e0ef;
+            }
+            a:hover {
+                background: #90e0ef;
+                color: black;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Lasa</h1>
+    <p>
+        Lasa is a stateless proxy that generates a RSS or an Atom feed from a 
+        <a href="https://standard.site" target="_blank">Standard.site</a> publication.
+        It automatically fetches the publication and its linked documents from the PDS and returns a feed.
+    </p>
+    <h2>How to use it?</h2>
+    <p>
+        You can list the publications of <code>example.org</code> by going to <code>/example.org</code>.
+        Each publication has a unique <em>record key</em>.
+        This key is used to generate its RSS or its Atom feed.
+    </p>
+    <p>
+        If <code>example.org</code> has a publication with <code>fooBar</code> as record key, its RSS feed is:
+        <code>/example.org/fooBar/rss</code>, and its Atom feed is: <code>/example.org/fooBar/atom</code>.
+    </p>
+    <p>
+        Some publications cannot have a RSS or an Atom feed, because they don't have given enough information to
+        generate one.
+        If the RSS feed doesn't work, try the Atom one.
+    </p>
+    <h4>Examples:</h4>
+    <ul>
+        <li><a href="/pckt.blog/3lwafzkjqm25s/rss">pckt - Dev Journal</a></li>
+        <li><a href="/dholms.at/3m6zrpzbs3s2y/atom">Daniel&#39;s Leaflets</a></li>
+    </ul>
+    <h2>How does it works?</h2>
+    <p>
+        When you request a feed, Lasa parses the handle (or the did) of the user and the record key.
+        Then, it looks in the cache if it already has generated this feed in the past hour.
+        If it did, it returns this.
+        If it didn't, it fetches the publication and the documents to generate the feed.
+    </p>
+    <p>
+        Lasa is open-source: check out the <a href="https://tangled.org/anhgelus.world/lasa" target="_blank">source
+        code</a> hosted on Tangled, an ATProto forge.
+    </p>
+    <p>
+        Lasa is a project by <a href="https://anhgelus.world/" target="_blank">Anhgelus Morhtuuzh</a>.
+    </p>
+</body>
+</html>

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -20,6 +21,9 @@ import (
 	"tangled.org/anhgelus.world/xrpc"
 	"tangled.org/anhgelus.world/xrpc/atproto"
 )
+
+//go:embed index.html
+var index []byte
 
 func handleRunHelp() {
 	internal.Usage(
@@ -87,6 +91,9 @@ func handleRun(args []string) {
 		}
 	})
 	mux.HandleFunc("GET /{id}/{$}", func(w http.ResponseWriter, r *http.Request) {
+	})
+	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(index)
 	})
 
 	ch := make(chan error, 1)
