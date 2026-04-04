@@ -131,8 +131,8 @@ func middlewares(h http.Handler, ctx context.Context) http.Handler {
 		slog.Debug("request", "path", r.URL.Path)
 		defer func() {
 			if err := recover(); err != nil {
-				slog.Error("panic!", "err", err)
 				w.WriteHeader(http.StatusInternalServerError)
+				panic(err)
 			}
 		}()
 		h.ServeHTTP(w, r.WithContext(ctx))
