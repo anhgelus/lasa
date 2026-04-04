@@ -33,7 +33,7 @@ func (d *Directory) fromCache(ctx context.Context, key string) *atproto.DIDDocum
 	}
 	resp, err := d.cache.Get(ctx, key)
 	var doc *atproto.DIDDocument
-	if err == nil {
+	if err == nil && !resp.IsNil() {
 		b := resp.Value()
 		err = json.Unmarshal([]byte(b), &doc)
 		if err == nil {
