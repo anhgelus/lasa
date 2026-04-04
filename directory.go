@@ -7,18 +7,18 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/valkey-io/valkey-go"
+	glide "github.com/valkey-io/valkey-glide/go/v2"
 	"tangled.org/anhgelus.world/xrpc/atproto"
 )
 
 type Directory struct {
 	inner    atproto.Directory
-	cache    valkey.Client
+	cache    *glide.Client
 	duration time.Duration
 	limiter  *limitManyRequests[*atproto.DIDDocument]
 }
 
-func NewDirectory(dir atproto.Directory, cache valkey.Client, dur time.Duration) *Directory {
+func NewDirectory(dir atproto.Directory, cache *glide.Client, dur time.Duration) *Directory {
 	return &Directory{
 		inner:    dir,
 		cache:    cache,
@@ -31,20 +31,15 @@ func (d *Directory) fromCache(ctx context.Context, key string) *atproto.DIDDocum
 	if d.cache == nil {
 		return nil
 	}
-	resp := d.cache.Do(ctx, d.cache.B().Get().Key(key).Build())
-	err := resp.Error()
+	resp, err := d.cache.Get(ctx, key)
 	var doc *atproto.DIDDocument
 	if err == nil {
-		b, err := resp.AsBytes()
+		b := resp.Value()
+		err = json.Unmarshal([]byte(b), &doc)
 		if err == nil {
-			err = json.Unmarshal(b, &doc)
-			if err == nil {
-				return doc
-			} else {
-				slog.Warn("cannot unmarshal cache response into DIDDocument", "resp", b)
-			}
+			return doc
 		} else {
-			slog.Warn("cannot convert cache response into bytes", "resp", resp)
+			slog.Warn("cannot unmarshal cache response into DIDDocument", "resp", b)
 		}
 	}
 	return nil
@@ -59,21 +54,13 @@ func (d *Directory) toCache(ctx context.Context, key string, doc *atproto.DIDDoc
 		slog.Warn("cannot marshal DIDDocument", "document", doc, "error", err)
 		return
 	}
-	cache := d.cache
-	err = cache.Do(ctx, cache.B().Set().Key(key).Value(string(b)).Build()).Error()
+	_, err = d.cache.Set(ctx, key, string(b))
 	if err != nil {
 		slog.Warn("cannot set DIDDocument in cache", "document", doc, "error", err)
 		return
 	}
 	slog.Debug("DIDDocument set in cache")
-	err = cache.Do(
-		ctx,
-		cache.B().
-			Expireat().
-			Key(key).
-			Timestamp(time.Now().Add(d.duration).Unix()).
-			Build(),
-	).Error()
+	_, err = d.cache.ExpireAt(ctx, key, time.Now().Add(d.duration))
 	if err != nil {
 		slog.Warn("cannot set DIDDocument expire at", "document", doc, "error", err)
 	}

@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/valkey-io/valkey-go"
+	glide "github.com/valkey-io/valkey-glide/go/v2"
 	site "tangled.org/anhgelus.world/goat-site"
 	"tangled.org/anhgelus.world/lasa"
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
@@ -61,7 +61,7 @@ func handleRun(args []string) {
 	}
 	ctx = context.WithValue(ctx, keyCfg, cfg)
 
-	var cache valkey.Client
+	var cache *glide.Client
 	var dur time.Duration
 	if cfg.Cache != nil {
 		cache, err = cfg.Cache.Connect()
