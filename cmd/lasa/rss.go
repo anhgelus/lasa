@@ -14,11 +14,11 @@ import (
 func handleRSSUsage() {
 	internal.Usage(
 		`lasa rss <identifier> <rkey>`,
-		`Generate the RSS for the given publication.`,
+		`Generate the RSS feed for the given publication.`,
 		nil,
 		flags,
 		[]string{
-			"lasa publication did:web:example.org fooBar\t-\tgenerate RSS publication of did:web:example.org referenced by fooBar",
+			"lasa rss did:web:example.org fooBar\t-\tgenerate RSS feed of did:web:example.org referenced by fooBar",
 		},
 	)
 	if !help {
@@ -26,24 +26,29 @@ func handleRSSUsage() {
 	}
 }
 
-func handleRSS(args []string) {
-	if len(args) != 2 || help {
-		handleRSSUsage()
-		return
-	}
+func handleFeed(args []string) (*atproto.DID, xrpc.RecordStored[*site.Publication]) {
 	did, err := lasa.Resolve(context.Background(), client.Directory(), args[0])
 	if err != nil {
 		panic(err)
 	}
 	rkey, err := atproto.ParseRecordKey(args[1])
 	if err != nil {
-		return
+		panic(err)
 	}
 	pub, err := xrpc.GetRecord[*site.Publication](context.Background(), client, did, rkey, nil)
 	if err != nil {
 		panic(err)
 	}
-	err = lasa.GenerateRSS(context.Background(), client, os.Stdout, did, pub)
+	return did, pub
+}
+
+func handleRSS(args []string) {
+	if len(args) != 2 || help {
+		handleRSSUsage()
+		return
+	}
+	did, pub := handleFeed(args)
+	err := lasa.GenerateRSS(context.Background(), client, os.Stdout, did, pub)
 	if err != nil {
 		panic(err)
 	}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>{{ .Title }}</title>
+    <id>{{ .Link }}</id>
+    <link href="{{ .Link }}"/>
+    <updated>{{ .LastBuildDate }}</updated>
+    <generator>Lasa v0.1.0</generator>
+    <author>
+        <name>{{ .Author }}</name>
+    </author>
+    {{ range .Items -}}
+        <entry>
+            <title>{{ .Title }}</title>
+            <link href="{{ .Link }}"/>
+            <id>{{ .Link }}</id>
+            <updated>{{ .UpdatedDate }}</updated>
+            <published>{{ .PubDate }}</published>
+            {{ if isSet .Description -}}<summary>{{ .Description }}</summary>{{- end }}
+            {{ range .Categories }}<category term="{{ . }}"/>{{ end }}
+        </entry>
+    {{- end -}}
+</feed>
+

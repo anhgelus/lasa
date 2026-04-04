@@ -44,7 +44,7 @@ func handleRun(args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	slog.Info("loading config...", "path", configPath)
+	slog.Info("loading config", "path", configPath)
 	cfg, err := config.Load(configPath)
 	if err != nil {
 		panic(err)
@@ -65,32 +65,23 @@ func handleRun(args []string) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{id}/{rkey}/rss", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		client := ctx.Value(keyClient).(xrpc.Client)
-		did, err := lasa.Resolve(ctx, client.Directory(), r.PathValue("id"))
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+		did, pub, ok := getPub(w, r)
+		if !ok {
 			return
-		}
-		rkey, err := atproto.ParseRecordKey(r.PathValue("rkey"))
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		pub, err := xrpc.GetRecord[*site.Publication](ctx, client, did, rkey, nil)
-		if err != nil {
-			if err, ok := errors.AsType[xrpc.ErrStandardResponse](err); ok {
-				if errors.Is(err, xrpc.ErrRecordNotFound) {
-					w.WriteHeader(http.StatusNotFound)
-					return
-				}
-				panic(err)
-			} else {
-				panic(err)
-			}
 		}
 		w.Header().Set("Content-Type", "application/rss+xml")
 		err = lasa.GenerateRSS(ctx, client, w, did, pub)
+		if err != nil {
+			panic(err)
+		}
+	})
+	mux.HandleFunc("GET /{id}/{rkey}/atom", func(w http.ResponseWriter, r *http.Request) {
+		did, pub, ok := getPub(w, r)
+		if !ok {
+			return
+		}
+		w.Header().Set("Content-Type", "application/atom+xml")
+		err = lasa.GenerateAtom(ctx, client, w, did, pub)
 		if err != nil {
 			panic(err)
 		}
@@ -101,7 +92,7 @@ func handleRun(args []string) {
 	ch := make(chan error, 1)
 
 	go func() {
-		slog.Info("starting...")
+		slog.Info("starting")
 		ch <- http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), middlewares(mux, ctx))
 	}()
 	select {
@@ -126,4 +117,33 @@ func middlewares(h http.Handler, ctx context.Context) http.Handler {
 		}()
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func getPub(w http.ResponseWriter, r *http.Request) (*atproto.DID, xrpc.RecordStored[*site.Publication], bool) {
+	var pub xrpc.RecordStored[*site.Publication]
+	ctx := r.Context()
+	client := ctx.Value(keyClient).(xrpc.Client)
+	did, err := lasa.Resolve(ctx, client.Directory(), r.PathValue("id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return nil, pub, false
+	}
+	rkey, err := atproto.ParseRecordKey(r.PathValue("rkey"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return nil, pub, false
+	}
+	pub, err = xrpc.GetRecord[*site.Publication](ctx, client, did, rkey, nil)
+	if err != nil {
+		if err, ok := errors.AsType[xrpc.ErrStandardResponse](err); ok {
+			if errors.Is(err, xrpc.ErrRecordNotFound) {
+				w.WriteHeader(http.StatusNotFound)
+				return nil, pub, false
+			}
+			panic(err)
+		} else {
+			panic(err)
+		}
+	}
+	return did, pub, true
 }

@@ -10,11 +10,15 @@ lasa - display Standard.site publications
 
 *lasa* [*-h*] rss _identifier_ _rkey_
 
+*lasa* [*-h*] atom _identifier_ _rkey_
+
 # DESCRIPTION
 
 *lasa publication* displays information for a Standard.site publication.
 
-*lasa rss* renders the RSS feed for the given RSS feed.
+*lasa rss* renders the RSS feed for the given publication.
+
+*lasa atom* renders the Atom feed for the given publication.
 
 # OPTIONS
 

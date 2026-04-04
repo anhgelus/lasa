@@ -23,7 +23,8 @@ func init() {
 
 var commands = []internal.Command{
 	{Name: "publication", Usage: "display publications", Callback: handlePublication},
-	{Name: "rss", Usage: "generate RSS", Callback: handleRSS},
+	{Name: "rss", Usage: "generate RSS feed", Callback: handleRSS},
+	{Name: "atom", Usage: "generate Atom feed", Callback: handleAtom},
 }
 
 var client xrpc.Client
