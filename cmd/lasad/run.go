@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	_ "embed"
+	"embed"
 	"errors"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net"
 	"net/http"
@@ -22,8 +23,8 @@ import (
 	"tangled.org/anhgelus.world/xrpc/atproto"
 )
 
-//go:embed index.html
-var index []byte
+//go:embed index.html author.html
+var files embed.FS
 
 func handleRunHelp() {
 	internal.Usage(
@@ -38,6 +39,11 @@ func handleRunHelp() {
 	if !help {
 		os.Exit(1)
 	}
+}
+
+type Publication struct {
+	Link string
+	Name string
 }
 
 func handleRun(args []string) {
@@ -91,9 +97,46 @@ func handleRun(args []string) {
 		}
 	})
 	mux.HandleFunc("GET /{id}/{$}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		client := ctx.Value(keyClient).(xrpc.Client)
+		did, err := lasa.Resolve(ctx, client.Directory(), r.PathValue("id"))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		doc, err := client.Directory().ResolveDID(ctx, did)
+		if err != nil {
+			panic(err)
+		}
+		h, _ := doc.Handle()
+		v := struct {
+			Author       string
+			Publications []Publication
+		}{Author: h.String()}
+		pubs, _, err := xrpc.ListRecords[*site.Publication](ctx, client, did, 0, "", false)
+		if err != nil {
+			panic(err)
+		}
+		v.Publications = make([]Publication, len(pubs))
+		for i, pub := range pubs {
+			uri, err := pub.URI.URI(ctx, client.Directory())
+			if err != nil {
+				panic(err)
+			}
+			link := fmt.Sprintf("/%s/%s", did, uri.RecordKey())
+			v.Publications[i] = Publication{link, pub.Value.Name}
+		}
+		err = template.Must(template.ParseFS(files, "author.html")).ExecuteTemplate(w, "author.html", v)
+		if err != nil {
+			panic(err)
+		}
 	})
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(index)
+		b, err := files.ReadFile("index.html")
+		if err != nil {
+			panic(err)
+		}
+		w.Write(b)
 	})
 
 	ch := make(chan error, 1)
