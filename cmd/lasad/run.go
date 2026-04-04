@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
-	"html/template"
 	"log/slog"
 	"net"
 	"net/http"
@@ -15,12 +13,10 @@ import (
 	"time"
 
 	glide "github.com/valkey-io/valkey-glide/go/v2"
-	site "tangled.org/anhgelus.world/goat-site"
 	"tangled.org/anhgelus.world/lasa"
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
 	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
 	"tangled.org/anhgelus.world/xrpc"
-	"tangled.org/anhgelus.world/xrpc/atproto"
 )
 
 //go:embed index.html author.html
@@ -68,30 +64,24 @@ func handleRun(args []string) {
 		if err != nil {
 			panic(err)
 		}
+		slog.Info("connected to valkey")
 		dur = time.Duration(cfg.Cache.Duration) * time.Minute
 	}
 	client := lasa.NewClient(http.DefaultClient, net.DefaultResolver, cache, dur, cfg.Domain)
 	ctx = context.WithValue(ctx, keyClient, client)
+	ctx = context.WithValue(ctx, keyDir, NewDirectory(cache, dur))
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{id}/{rkey}/rss", func(w http.ResponseWriter, r *http.Request) {
-		did, pub, ok := getPub(w, r)
-		if !ok {
-			return
-		}
-		w.Header().Set("Content-Type", "application/rss+xml")
-		err = lasa.GenerateRSS(ctx, client, w, did, pub)
+		dir := r.Context().Value(keyDir).(*Directory)
+		err := dir.Feed(r.Context(), w, r, "rss", lasa.GenerateRSS)
 		if err != nil {
 			panic(err)
 		}
 	})
 	mux.HandleFunc("GET /{id}/{rkey}/atom", func(w http.ResponseWriter, r *http.Request) {
-		did, pub, ok := getPub(w, r)
-		if !ok {
-			return
-		}
-		w.Header().Set("Content-Type", "application/atom+xml")
-		err = lasa.GenerateAtom(ctx, client, w, did, pub)
+		dir := r.Context().Value(keyDir).(*Directory)
+		err := dir.Feed(r.Context(), w, r, "atom", lasa.GenerateAtom)
 		if err != nil {
 			panic(err)
 		}
@@ -104,32 +94,12 @@ func handleRun(args []string) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		doc, err := client.Directory().ResolveDID(ctx, did)
+		dir := ctx.Value(keyDir).(*Directory)
+		b, err := dir.Author(ctx, did)
 		if err != nil {
 			panic(err)
 		}
-		h, _ := doc.Handle()
-		v := struct {
-			Author       string
-			Publications []Publication
-		}{Author: h.String()}
-		pubs, _, err := xrpc.ListRecords[*site.Publication](ctx, client, did, 0, "", false)
-		if err != nil {
-			panic(err)
-		}
-		v.Publications = make([]Publication, len(pubs))
-		for i, pub := range pubs {
-			uri, err := pub.URI.URI(ctx, client.Directory())
-			if err != nil {
-				panic(err)
-			}
-			link := fmt.Sprintf("/%s/%s", did, uri.RecordKey())
-			v.Publications[i] = Publication{link, pub.Value.Name}
-		}
-		err = template.Must(template.ParseFS(files, "author.html")).ExecuteTemplate(w, "author.html", v)
-		if err != nil {
-			panic(err)
-		}
+		w.Write(b)
 	})
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		b, err := files.ReadFile("index.html")
@@ -167,33 +137,4 @@ func middlewares(h http.Handler, ctx context.Context) http.Handler {
 		}()
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})
-}
-
-func getPub(w http.ResponseWriter, r *http.Request) (*atproto.DID, xrpc.RecordStored[*site.Publication], bool) {
-	var pub xrpc.RecordStored[*site.Publication]
-	ctx := r.Context()
-	client := ctx.Value(keyClient).(xrpc.Client)
-	did, err := lasa.Resolve(ctx, client.Directory(), r.PathValue("id"))
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return nil, pub, false
-	}
-	rkey, err := atproto.ParseRecordKey(r.PathValue("rkey"))
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return nil, pub, false
-	}
-	pub, err = xrpc.GetRecord[*site.Publication](ctx, client, did, rkey, nil)
-	if err != nil {
-		if err, ok := errors.AsType[xrpc.ErrStandardResponse](err); ok {
-			if errors.Is(err, xrpc.ErrRecordNotFound) {
-				w.WriteHeader(http.StatusNotFound)
-				return nil, pub, false
-			}
-			panic(err)
-		} else {
-			panic(err)
-		}
-	}
-	return did, pub, true
 }

@@ -25,16 +25,16 @@ func (l *limitRequests[T]) Send(v T) {
 	}
 }
 
-type limitManyRequests[T any] struct {
+type LimitManyRequests[T any] struct {
 	content map[string]*limitRequests[T]
 	mu      sync.RWMutex
 }
 
-func newLimitManyRequests[T any]() *limitManyRequests[T] {
-	return &limitManyRequests[T]{content: make(map[string]*limitRequests[T])}
+func NewLimitManyRequests[T any]() *LimitManyRequests[T] {
+	return &LimitManyRequests[T]{content: make(map[string]*limitRequests[T])}
 }
 
-func (lm *limitManyRequests[T]) Do(key string, fn func() (T, error)) (T, error) {
+func (lm *LimitManyRequests[T]) Do(key string, fn func() (T, error)) (T, error) {
 	lm.mu.RLock()
 	l, ok := lm.content[key]
 	if ok {

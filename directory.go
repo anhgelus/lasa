@@ -15,14 +15,14 @@ type Directory struct {
 	inner    atproto.Directory
 	cache    *glide.Client
 	duration time.Duration
-	limiter  *limitManyRequests[*atproto.DIDDocument]
+	limiter  *LimitManyRequests[*atproto.DIDDocument]
 }
 
 func NewDirectory(dir atproto.Directory, cache *glide.Client, dur time.Duration) *Directory {
 	return &Directory{
 		inner:    dir,
 		cache:    cache,
-		limiter:  newLimitManyRequests[*atproto.DIDDocument](),
+		limiter:  NewLimitManyRequests[*atproto.DIDDocument](),
 		duration: dur,
 	}
 }
@@ -60,9 +60,9 @@ func (d *Directory) toCache(ctx context.Context, key string, doc *atproto.DIDDoc
 		return
 	}
 	slog.Debug("DIDDocument set in cache")
-	_, err = d.cache.ExpireAt(ctx, key, time.Now().Add(d.duration))
+	_, err = d.cache.Expire(ctx, key, d.duration)
 	if err != nil {
-		slog.Warn("cannot set DIDDocument expire at", "document", doc, "error", err)
+		slog.Warn("cannot set DIDDocument expire", "document", doc, "error", err)
 	}
 }
 
