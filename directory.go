@@ -3,6 +3,7 @@ package lasa
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -58,40 +59,50 @@ func (d *Directory) toCache(ctx context.Context, key string, doc *atproto.DIDDoc
 		slog.Warn("cannot marshal DIDDocument", "document", doc, "error", err)
 		return
 	}
-	err = d.cache.Do(ctx, d.cache.B().Set().Key(key).Value(string(b)).Build()).Error()
+	cache := d.cache
+	err = cache.Do(ctx, cache.B().Set().Key(key).Value(string(b)).Build()).Error()
 	if err != nil {
 		slog.Warn("cannot set DIDDocument in cache", "document", doc, "error", err)
+		return
+	}
+	slog.Debug("DIDDocument set in cache")
+	err = cache.Do(
+		ctx,
+		cache.B().
+			Expireat().
+			Key(key).
+			Timestamp(time.Now().Add(d.duration).Unix()).
+			Build(),
+	).Error()
+	if err != nil {
+		slog.Warn("cannot set DIDDocument expire at", "document", doc, "error", err)
 	}
 }
 
 func (d *Directory) ResolveHandle(ctx context.Context, h atproto.Handle) (*atproto.DIDDocument, error) {
-	key := h.String()
-	doc := d.fromCache(ctx, key)
-	if doc != nil {
-		return doc, nil
-	}
-	slog.Debug("cannot get DIDDocument from cache, requesting")
-
-	return d.limiter.Do(key, func() (*atproto.DIDDocument, error) {
-		doc, err := d.inner.ResolveHandle(ctx, h)
-		if err != nil {
-			return nil, err
-		}
-		d.toCache(ctx, key, doc)
-		return doc, nil
-	})
+	return resolve(ctx, d, h, d.inner.ResolveHandle)
 }
 
 func (d *Directory) ResolveDID(ctx context.Context, did *atproto.DID) (*atproto.DIDDocument, error) {
-	key := did.String()
+	return resolve(ctx, d, did, d.inner.ResolveDID)
+}
+
+func resolve[T fmt.Stringer](
+	ctx context.Context,
+	d *Directory,
+	authority T,
+	res func(context.Context, T) (*atproto.DIDDocument, error),
+) (*atproto.DIDDocument, error) {
+	key := authority.String()
 	doc := d.fromCache(ctx, key)
 	if doc != nil {
+		slog.Debug("DIDDocument got from cache")
 		return doc, nil
 	}
 	slog.Debug("cannot get DIDDocument from cache, requesting")
 
 	return d.limiter.Do(key, func() (*atproto.DIDDocument, error) {
-		doc, err := d.inner.ResolveDID(ctx, did)
+		doc, err := res(ctx, authority)
 		if err != nil {
 			return nil, err
 		}
