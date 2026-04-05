@@ -8,11 +8,13 @@ import (
 	"tangled.org/anhgelus.world/xrpc/atproto"
 )
 
-func Resolve(ctx context.Context, dir atproto.Directory, arg string) (did *atproto.DID, err error) {
+func Resolve(ctx context.Context, dir atproto.Directory, arg string) (*atproto.DID, error) {
+	var err error
 	if strings.HasPrefix(arg, "did:") {
+		var did *atproto.DID
 		did, err = atproto.ParseDID(arg)
 		if err == nil {
-			return
+			return did, nil
 		}
 	}
 	handle, e := atproto.ParseHandle(arg)
@@ -22,7 +24,11 @@ func Resolve(ctx context.Context, dir atproto.Directory, arg string) (did *atpro
 		err = errors.Join(err, e)
 	}
 	if err != nil {
-		return
+		return nil, err
 	}
-	return handle.DID(ctx, dir)
+	doc, err := dir.ResolveHandle(ctx, handle)
+	if err != nil {
+		return nil, err
+	}
+	return doc.DID, nil
 }
