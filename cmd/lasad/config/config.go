@@ -13,17 +13,18 @@ import (
 const DefaultPath = "/etc/lasad.toml"
 
 type Config struct {
-	Domain string `toml:"domain"`
-	Port   uint   `toml:"port"`
-	Cache  *Cache `toml:"cache"`
+	Domain      string  `toml:"domain"`
+	Port        uint    `toml:"port"`
+	Cache       *Cache  `toml:"cache"`
+	LegalNotice *string `toml:"legal_notice_url"`
 }
 
 type Cache struct {
-	Host     string    `toml:"host"`
-	Port     uint      `toml:"port"`
-	DB       uint      `toml:"db"`
-	Duration uint      `toml:"duration"`
-	Auth     CacheAuth `toml:"auth"`
+	Host     string     `toml:"host"`
+	Port     uint       `toml:"port"`
+	DB       uint       `toml:"db"`
+	Duration uint       `toml:"duration"`
+	Auth     *CacheAuth `toml:"auth"`
 }
 
 type CacheAuth struct {
@@ -35,7 +36,7 @@ type CacheAuth struct {
 func (c *Cache) Connect() (*glide.Client, error) {
 	cfg := config.NewClientConfiguration().
 		WithAddress(&config.NodeAddress{Host: c.Host, Port: int(c.Port)})
-	if c.Auth.Password != "" {
+	if c.Auth != nil {
 		if c.Auth.Username != "" {
 			cfg = cfg.WithCredentials(config.NewServerCredentials(c.Auth.Username, c.Auth.Password))
 		} else {

@@ -14,6 +14,7 @@ import (
 	glide "github.com/valkey-io/valkey-glide/go/v2"
 	site "tangled.org/anhgelus.world/goat-site"
 	"tangled.org/anhgelus.world/lasa"
+	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
 	"tangled.org/anhgelus.world/xrpc"
 	"tangled.org/anhgelus.world/xrpc/atproto"
 )
@@ -73,11 +74,13 @@ func (d *Directory) Author(ctx context.Context, did *atproto.DID) ([]byte, error
 		if err != nil {
 			return nil, err
 		}
+		cfg := ctx.Value(keyCfg).(*config.Config)
 		h, _ := doc.Handle()
 		v := struct {
 			Author       string
+			LegalNotice  *string
 			Publications []Publication
-		}{Author: h.String()}
+		}{Author: h.String(), LegalNotice: cfg.LegalNotice}
 		pubs, _, err := xrpc.ListRecords[*site.Publication](ctx, client, did, 0, "", false)
 		if err != nil {
 			return nil, err
@@ -93,7 +96,9 @@ func (d *Directory) Author(ctx context.Context, did *atproto.DID) ([]byte, error
 			v.Publications[i] = Publication{pub.Value.URL.String(), link, pub.Value.Name, uri.RecordKey().String()}
 		}
 		var bf bytes.Buffer
-		err = template.Must(template.ParseFS(files, "author.html")).ExecuteTemplate(&bf, "author.html", v)
+		err = template.Must(template.New("").Funcs(map[string]any{
+			"isSet": lasa.IsSet,
+		}).ParseFS(files, "author.html")).ExecuteTemplate(&bf, "author.html", v)
 		if err != nil {
 			return nil, err
 		}

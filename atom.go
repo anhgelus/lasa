@@ -26,6 +26,6 @@ func GenerateAtom(
 		return err
 	}
 	return template.Must(template.New("rss").Funcs(map[string]any{
-		"isSet": isSet,
+		"isSet": IsSet,
 	}).ParseFS(atomTemplate, "atom.xml")).ExecuteTemplate(w, "atom.xml", data)
 }

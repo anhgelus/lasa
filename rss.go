@@ -61,7 +61,7 @@ func GenerateRSS(
 		return err
 	}
 	return template.Must(template.New("rss").Funcs(map[string]any{
-		"isSet": isSet,
+		"isSet": IsSet,
 	}).ParseFS(rssTemplate, "rss.xml")).ExecuteTemplate(w, "rss.xml", data)
 }
 
@@ -125,6 +125,6 @@ func genFeedData(
 	return data, nil
 }
 
-func isSet(v any) bool {
+func IsSet(v any) bool {
 	return !reflect.ValueOf(v).IsZero()
 }
