@@ -38,8 +38,10 @@ func handleRunHelp() {
 }
 
 type Publication struct {
+	URL  string
 	Link string
 	Name string
+	RKey string
 }
 
 func handleRun(args []string) {

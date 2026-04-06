@@ -10,7 +10,7 @@
         }
         body {
             margin: 0;
-            padding-bottom: 4rem;
+            padding: 0 1rem 4rem 1rem;
             font-family: system-ui, Inter, sans-serif;
             line-height: 1.6em;
             display: flex;
@@ -43,6 +43,25 @@
             background: #023e8a;
             color: white;
         }
+        main {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+        main > div {
+            border: 10px double #000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+        }
+        main h3, main a {
+            display: block;
+            text-align: center;
+            padding: 0.5rem;
+        }
+        main h3 {
+            border-bottom: 2px solid #000;
+            margin: 0;
+        }
 
         @media only screen and (prefers-color-scheme: dark) {
             :root {
@@ -56,18 +75,33 @@
                 background: #90e0ef;
                 color: black;
             }
+            main > div {
+                border: 10px double #ded8c3;
+            }
+            main h3 {
+                border-bottom: 2px solid #ded8c3;
+            }
+        }
+        @media only screen and (max-width: 650px) {
+            main {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <h1>{{ .Author }}'s publications</h1>
-    <h3>RSS</h3>
-    <ul>
-        {{- range .Publications }}<li><a href="{{ .Link }}/rss">{{ .Name }}</a></li>{{ end -}}
-    </ul>
-    <h3>Atom</h3>
-    <ul>
-        {{- range .Publications }}<li><a href="{{ .Link }}/atom">{{ .Name }}</a></li>{{ end -}}
-    </ul>
+    <main>
+        {{- range .Publications }}
+            <div>
+                <h3>{{ .Name }}</h3>
+                <div class="publications">
+                    <a href="{{ .URL }}" target="_blank">Read</a>
+                    <a href="{{ .Link }}/rss">RSS</a>
+                    <a href="{{ .Link }}/atom">Atom</a>
+                </div>
+            </div>
+        {{ end -}}
+    </main>
 </body>
 </html>

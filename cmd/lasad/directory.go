@@ -90,7 +90,7 @@ func (d *Directory) Author(ctx context.Context, did *atproto.DID) ([]byte, error
 				continue
 			}
 			link := fmt.Sprintf("/%s/%s", did, uri.RecordKey())
-			v.Publications[i] = Publication{link, pub.Value.Name}
+			v.Publications[i] = Publication{pub.Value.URL.String(), link, pub.Value.Name, uri.RecordKey().String()}
 		}
 		var bf bytes.Buffer
 		err = template.Must(template.ParseFS(files, "author.html")).ExecuteTemplate(&bf, "author.html", v)
