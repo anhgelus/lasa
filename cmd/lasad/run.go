@@ -78,14 +78,16 @@ func handleRun(args []string) {
 		dir := r.Context().Value(keyDir).(*Directory)
 		err := dir.Feed(r.Context(), w, r, "rss", lasa.GenerateRSS)
 		if err != nil {
-			panic(err)
+			HandleErrors(w, err)
+			return
 		}
 	})
 	mux.HandleFunc("GET /{id}/{rkey}/atom", func(w http.ResponseWriter, r *http.Request) {
 		dir := r.Context().Value(keyDir).(*Directory)
 		err := dir.Feed(r.Context(), w, r, "atom", lasa.GenerateAtom)
 		if err != nil {
-			panic(err)
+			HandleErrors(w, err)
+			return
 		}
 	})
 	mux.HandleFunc("GET /{id}/{$}", func(w http.ResponseWriter, r *http.Request) {
@@ -93,20 +95,22 @@ func handleRun(args []string) {
 		client := ctx.Value(keyClient).(xrpc.Client)
 		did, err := lasa.Resolve(ctx, client.Directory(), r.PathValue("id"))
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			HandleErrors(w, err)
 			return
 		}
 		dir := ctx.Value(keyDir).(*Directory)
 		b, err := dir.Author(ctx, did)
 		if err != nil {
-			panic(err)
+			HandleErrors(w, err)
+			return
 		}
 		w.Write(b)
 	})
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		b, err := files.ReadFile("index.html")
 		if err != nil {
-			panic(err)
+			HandleErrors(w, err)
+			return
 		}
 		w.Write(b)
 	})
