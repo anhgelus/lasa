@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 	"time"
 
@@ -148,15 +149,16 @@ func middlewares(h http.Handler, ctx context.Context) http.Handler {
 		log := slog.With("uri", r.RequestURI)
 		defer func() {
 			if err := recover(); err != nil {
+				debug.PrintStack()
 				w.WriteHeader(http.StatusInternalServerError)
-				log.Error("panic!")
+				log.Error("panic! (stack trace printed to stderr)")
 			}
 		}()
 		now := time.Now()
 		h.ServeHTTP(status, r.WithContext(ctx))
 		log = log.With("status", status.code, "duration", time.Since(now))
 		if status.code < 400 {
-			log.Debug("served")
+			log.Debug("handled")
 		} else if status.code < 500 {
 			cfg := ctx.Value(keyCfg).(*config.Config)
 			if (status.code == http.StatusNotFound && cfg.LogNotFound) ||

@@ -12,7 +12,7 @@ valkey:
     {{docker}} run --rm --name {{valkey_container}} -p 6379:6379 -d docker.io/valkey/valkey:alpine
 
 stop:
-    {{docker}} stop {{valkey_container}}
+    {{docker}} stop {{valkey_container}}
 
 build: build-lasa build-lasad
 
