@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
+	"strings"
 	"syscall"
 	"time"
 
@@ -73,6 +74,7 @@ func handleRun(args []string) {
 	client := lasa.NewClient(http.DefaultClient, net.DefaultResolver, cache, dur, cfg.Domain)
 	ctx = context.WithValue(ctx, keyClient, client)
 	ctx = context.WithValue(ctx, keyDir, NewDirectory(cache, dur))
+	ctx = context.WithValue(ctx, keyLimiter, &Limiter{limited: make(map[string]*limited)})
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{id}/{rkey}/rss", func(w http.ResponseWriter, r *http.Request) {
@@ -145,31 +147,46 @@ func (w *statusWriter) WriteHeader(statusCode int) {
 
 func middlewares(h http.Handler, ctx context.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.RequestURI, "/favicon.ico") {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		limiter := ctx.Value(keyLimiter).(*Limiter)
 		status := &statusWriter{w, http.StatusOK}
 		log := slog.With("uri", r.RequestURI)
+		if limiter.isLimited(r) {
+			status.WriteHeader(http.StatusTooManyRequests)
+			limiter.handle(status, r, log.With("status", http.StatusTooManyRequests))
+			return
+		}
+
+		now := time.Now()
 		defer func() {
 			if err := recover(); err != nil {
 				debug.PrintStack()
 				w.WriteHeader(http.StatusInternalServerError)
-				log.Error("panic! (stack trace printed to stderr)")
+				log.Error("panic! (stack trace printed to stderr)", "duration", time.Since(now))
 			}
 		}()
-		now := time.Now()
+
 		h.ServeHTTP(status, r.WithContext(ctx))
+
 		log = log.With("status", status.code, "duration", time.Since(now))
 		if status.code < 400 {
 			log.Debug("handled")
 		} else if status.code < 500 {
 			cfg := ctx.Value(keyCfg).(*config.Config)
+			level := slog.LevelDebug
 			if (status.code == http.StatusNotFound && cfg.LogNotFound) ||
 				(status.code == http.StatusBadRequest && cfg.LogBadRequest) ||
 				(status.code != http.StatusNotFound && status.code != http.StatusBadRequest) {
-				log.Warn("invalid request")
-			} else {
-				log.Debug("invalid request")
+				level = slog.LevelWarn
 			}
+			log.Log(context.Background(), level, "invalid request")
 		} else {
 			log.Error("error while handling request")
 		}
+
+		limiter.handle(status, r, log)
 	})
 }

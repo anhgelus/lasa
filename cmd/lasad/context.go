@@ -6,4 +6,5 @@ const (
 	keyCfg = iota
 	keyClient
 	keyDir
+	keyLimiter
 )
