@@ -42,16 +42,7 @@ func main() {
 	if len(args) > 1 {
 		next = args[1:]
 	}
-	for _, c := range commands {
-		if c.Name == command {
-			flags.Parse(next)
-			next = flags.Args()
-			c.Callback(next)
-			return
-		}
-	}
-	handleHelp()
-	os.Exit(1)
+	internal.HandleCommands(command, next, commands, flags, handleHelp)
 }
 
 func handleHelp() {

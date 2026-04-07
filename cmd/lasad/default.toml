@@ -1,6 +1,10 @@
 domain = "example.org"
 port = 8000
 #legal_notice_url = "https://example.org/legal"
+# if you want to log HTTP 404 responses
+#log_not_found = true
+# if you want to log HTTP 400 responses
+#log_bad_request = true
 
 # if you are using valkey
 #[cache]

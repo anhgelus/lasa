@@ -132,15 +132,42 @@ func handleRun(args []string) {
 	}
 }
 
+type statusWriter struct {
+	http.ResponseWriter
+	code int
+}
+
+func (w *statusWriter) WriteHeader(statusCode int) {
+	w.ResponseWriter.WriteHeader(statusCode)
+	w.code = statusCode
+}
+
 func middlewares(h http.Handler, ctx context.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		slog.Debug("request", "path", r.URL.Path)
+		status := &statusWriter{w, http.StatusOK}
+		log := slog.With("uri", r.RequestURI)
 		defer func() {
 			if err := recover(); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				panic(err)
+				log.Error("panic!")
 			}
 		}()
-		h.ServeHTTP(w, r.WithContext(ctx))
+		now := time.Now()
+		h.ServeHTTP(status, r.WithContext(ctx))
+		log = log.With("status", status.code, "duration", time.Since(now))
+		if status.code < 400 {
+			log.Debug("served")
+		} else if status.code < 500 {
+			cfg := ctx.Value(keyCfg).(*config.Config)
+			if (status.code == http.StatusNotFound && cfg.LogNotFound) ||
+				(status.code == http.StatusBadRequest && cfg.LogBadRequest) ||
+				(status.code != http.StatusNotFound && status.code != http.StatusBadRequest) {
+				log.Warn("invalid request")
+			} else {
+				log.Debug("invalid request")
+			}
+		} else {
+			log.Error("error while handling request")
+		}
 	})
 }

@@ -13,10 +13,12 @@ import (
 const DefaultPath = "/etc/lasad.toml"
 
 type Config struct {
-	Domain      string  `toml:"domain"`
-	Port        uint    `toml:"port"`
-	Cache       *Cache  `toml:"cache"`
-	LegalNotice *string `toml:"legal_notice_url"`
+	Domain        string  `toml:"domain"`
+	Port          uint    `toml:"port"`
+	Cache         *Cache  `toml:"cache"`
+	LegalNotice   *string `toml:"legal_notice_url"`
+	LogNotFound   bool    `toml:"log_not_found"`
+	LogBadRequest bool    `toml:"log_bad_request"`
 }
 
 type Cache struct {
