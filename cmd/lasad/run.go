@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -163,9 +162,8 @@ func middlewares(h http.Handler, ctx context.Context) http.Handler {
 		now := time.Now()
 		defer func() {
 			if err := recover(); err != nil {
-				debug.PrintStack()
 				w.WriteHeader(http.StatusInternalServerError)
-				log.Error("panic! (stack trace printed to stderr)", "duration", time.Since(now))
+				log.Error("panic!", "error", err, "duration", time.Since(now))
 			}
 		}()
 

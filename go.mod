@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/BurntSushi/toml v1.6.0
+	github.com/nyttikord/logos v0.1.0
 	github.com/valkey-io/valkey-glide/go/v2 v2.3.1
 	tangled.org/anhgelus.world/goat-site v0.1.3
 	tangled.org/anhgelus.world/xrpc v0.4.0

@@ -6,7 +6,7 @@ docker := 'podman'
 
 dev:
     if [[ ! -f {{testConfig}} ]]; then go run ./cmd/lasad/ gen-config -c {{testConfig}}; fi
-    go run ./cmd/lasad/ -c {{testConfig}}
+    go run ./cmd/lasad/ -c {{testConfig}} -v
 
 valkey:
     {{docker}} run --rm --name {{valkey_container}} -p 6379:6379 -d docker.io/valkey/valkey:alpine

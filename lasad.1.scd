@@ -27,6 +27,10 @@ It generates a RSS or an Atom feed for an ATProto publication.
 
 *-c* specifies the path to the config. Default: */etc/lasad.toml*.
 
+*-v* increases verbosity (DEBUG is logged).
+
+*-no-color* disables colors in logs.
+
 *-h* prints the help.
 
 # CONFIGURATION
