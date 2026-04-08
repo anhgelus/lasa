@@ -142,7 +142,7 @@ func (d *Directory) Feed(
 	b, err = d.limiter.Do(key, func() ([]byte, error) {
 		pub, ok, err := getPub(ctx, did, rkey)
 		if !ok {
-			return nil, nil
+			return nil, err
 		}
 		var bf bytes.Buffer
 		err = gen(ctx, client, &bf, did, pub)

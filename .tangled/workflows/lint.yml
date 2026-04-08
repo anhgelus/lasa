@@ -1,0 +1,17 @@
+when:
+  - event: ["push", "pull_request"]
+    branch: main
+
+engine: nixery
+
+dependencies:
+  nixpkgs:
+    - gcc
+  nixpkgs/nixpkgs-unstable:
+    - golangci-lint
+    - go
+
+steps:
+  - name: Lint code
+    command: |
+      golangci-lint run
