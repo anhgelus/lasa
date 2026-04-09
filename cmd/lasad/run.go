@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -125,7 +126,7 @@ func handleRun(args []string) {
 	}()
 	select {
 	case <-ctx.Done():
-		err = context.Cause(ctx)
+		slog.Warn("received stop signal")
 	case err = <-ch:
 	}
 	slog.Info("exiting")
@@ -144,12 +145,16 @@ func (w *statusWriter) WriteHeader(statusCode int) {
 	w.code = statusCode
 }
 
-func middlewares(h http.Handler, ctx context.Context) http.Handler {
+func middlewares(h http.Handler, parent context.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, "/favicon.ico") {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+
+		ctx, cancel := context.WithCancelCause(parent)
+		defer cancel(errors.New("handling finished"))
+
 		limiter := ctx.Value(keyLimiter).(*Limiter)
 		status := &statusWriter{w, http.StatusOK}
 		log := slog.With("uri", r.RequestURI)
@@ -164,6 +169,9 @@ func middlewares(h http.Handler, ctx context.Context) http.Handler {
 			if err := recover(); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				log.Error("panic!", "error", err, "duration", time.Since(now))
+				if e, ok := err.(error); ok {
+					cancel(e)
+				}
 			}
 		}()
 

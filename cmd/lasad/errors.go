@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"tangled.org/anhgelus.world/xrpc"
 	"tangled.org/anhgelus.world/xrpc/atproto"
 )
 
@@ -17,6 +18,9 @@ func HandleErrors(w http.ResponseWriter, err error) {
 		errorNotFound(w, err)
 		return
 	} else if e, ok := errors.AsType[atproto.ErrDIDNotFound](err); ok {
+		errorNotFound(w, e)
+		return
+	} else if e, ok := errors.AsType[xrpc.ErrStandardResponse](err); ok && errors.Is(err, xrpc.ErrRecordNotFound) {
 		errorNotFound(w, e)
 		return
 	}
