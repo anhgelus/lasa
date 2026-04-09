@@ -152,8 +152,13 @@ func middlewares(h http.Handler, parent context.Context) http.Handler {
 			return
 		}
 
-		ctx, cancel := context.WithCancelCause(parent)
-		defer cancel(errors.New("handling finished"))
+		// timeouts request handling
+		ctx, cancel := context.WithTimeoutCause(parent, 15*time.Second, errors.New("handling timeouts"))
+		defer cancel()
+
+		var cancelCause context.CancelCauseFunc
+		ctx, cancelCause = context.WithCancelCause(ctx)
+		defer cancelCause(errors.New("handling finished"))
 
 		limiter := ctx.Value(keyLimiter).(*Limiter)
 		status := &statusWriter{w, http.StatusOK}
@@ -169,8 +174,16 @@ func middlewares(h http.Handler, parent context.Context) http.Handler {
 			if err := recover(); err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				log.Error("panic!", "error", err, "duration", time.Since(now))
-				if e, ok := err.(error); ok {
-					cancel(e)
+				switch e := err.(type) {
+				case error:
+					cancelCause(e)
+				case string:
+					cancelCause(errors.New(e))
+				default:
+					log.Warn(
+						"cannot set cancel cause, because error type is not supported",
+						"type", fmt.Sprintf("%T", e),
+					)
 				}
 			}
 		}()
