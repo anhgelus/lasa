@@ -21,7 +21,7 @@ func Usage(syntax, usage string, commands []Command, flags *flag.FlagSet, exampl
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Commands:")
 		for _, c := range commands {
-			fmt.Fprintln(w, "\t", c.Name, "\t-\t", c.Usage)
+			fmt.Fprintln(w, "\t", c.Name, "\t", c.Usage)
 		}
 	}
 	if flags != nil {
