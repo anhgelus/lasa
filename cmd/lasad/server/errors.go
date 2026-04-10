@@ -9,25 +9,20 @@ import (
 )
 
 func HandleErrors(w http.ResponseWriter, err error) {
-	w.Header().Add("Content-Type", "text/plain")
+	var status int
 	if atproto.IsErrCannotParse(err) {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		return
+		status = http.StatusBadRequest
 	} else if errors.Is(err, atproto.ErrHandleNotFound) {
-		errorNotFound(w, err)
-		return
-	} else if e, ok := errors.AsType[atproto.ErrDIDNotFound](err); ok {
-		errorNotFound(w, e)
-		return
-	} else if e, ok := errors.AsType[xrpc.ErrStandardResponse](err); ok && errors.Is(err, xrpc.ErrRecordNotFound) {
-		errorNotFound(w, e)
+		status = http.StatusNotFound
+	} else if _, ok := errors.AsType[atproto.ErrDIDNotFound](err); ok {
+		status = http.StatusNotFound
+	} else if errors.Is(err, xrpc.ErrRecordNotFound) {
+		status = http.StatusNotFound
+	}
+	if status > 0 {
+		http.Error(w, err.Error(), status)
 		return
 	}
 	panic(err)
-}
 
-func errorNotFound(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte(err.Error()))
 }

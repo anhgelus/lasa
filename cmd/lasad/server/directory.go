@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -122,13 +121,11 @@ func (d *Directory) Feed(
 	client := ctx.Value(keyClient).(xrpc.Client)
 	did, err := lasa.Resolve(ctx, client.Directory(), r.PathValue("id"))
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return nil
+		return err
 	}
 	rkey, err := atproto.ParseRecordKey(r.PathValue("rkey"))
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return nil
+		return err
 	}
 	key := did.String() + ":" + rkey.String() + ":" + kind
 	b := d.fromCache(ctx, key)
@@ -140,8 +137,8 @@ func (d *Directory) Feed(
 	slog.Debug("cannot get feed from cache", "did", did, "kind", kind)
 
 	b, err = d.limiter.Do(key, func() ([]byte, error) {
-		pub, ok, err := getPub(ctx, did, rkey)
-		if !ok {
+		pub, err := getPub(ctx, did, rkey)
+		if err != nil {
 			return nil, err
 		}
 		var bf bytes.Buffer
@@ -159,26 +156,15 @@ func (d *Directory) Feed(
 	if err != nil {
 		return err
 	}
-	if b == nil {
-		w.WriteHeader(http.StatusNotFound)
-		return nil
-	}
 	w.Write(b)
 	return err
 }
 
-func getPub(ctx context.Context, did *atproto.DID, rkey atproto.RecordKey) (xrpc.RecordStored[*site.Publication], bool, error) {
+func getPub(ctx context.Context, did *atproto.DID, rkey atproto.RecordKey) (xrpc.RecordStored[*site.Publication], error) {
 	client := ctx.Value(keyClient).(xrpc.Client)
 	pub, err := xrpc.GetRecord[*site.Publication](ctx, client, did, rkey, nil)
 	if err != nil {
-		if err, ok := errors.AsType[xrpc.ErrStandardResponse](err); ok {
-			if errors.Is(err, xrpc.ErrRecordNotFound) {
-				return pub, false, nil
-			}
-			return pub, false, err
-		} else {
-			return pub, false, err
-		}
+		return pub, err
 	}
-	return pub, true, nil
+	return pub, nil
 }
