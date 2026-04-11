@@ -1,0 +1,88 @@
+:root {
+    font-size: 18px;
+}
+body {
+    margin: 0;
+    padding: 0 1rem 4rem 1rem;
+    font-family: system-ui, Inter, sans-serif;
+    line-height: 1.6em;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+body > * {
+    display: block;
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+}
+h1, h2, h3 { 
+    line-height: 1.6em; 
+    margin-top: 2rem;
+}
+h1 { 
+    text-align: center; 
+}
+code {
+    font-family: monospace;
+    font-size: 0.9em;
+    letter-spacing: -0.2px;
+}
+a {
+    color: #023e8a;
+    padding: 0.1em;
+}
+a:hover {
+    background: #023e8a;
+    color: white;
+}
+main {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    align-items: center;
+}
+main > div {
+    border: 10px double #000;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+}
+main h3, main a {
+    display: block;
+    text-align: center;
+    padding: 0.5rem;
+}
+main h3 {
+    border-bottom: 2px solid #000;
+    margin: 0;
+}
+footer {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+    :root {
+        color: #f0ebd8;
+        background-color: #0d1321;
+    }
+    a {
+        color: #90e0ef;
+    }
+    a:hover {
+        background: #90e0ef;
+        color: black;
+    }
+    main > div {
+        border: 10px double #ded8c3;
+    }
+    main h3 {
+        border-bottom: 2px solid #ded8c3;
+    }
+}
+@media only screen and (max-width: 650px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+}

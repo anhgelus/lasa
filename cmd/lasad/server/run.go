@@ -16,7 +16,7 @@ import (
 	"tangled.org/anhgelus.world/xrpc"
 )
 
-//go:embed index.html author.html
+//go:embed index.html author.html style.css
 var files embed.FS
 
 type Publication struct {
@@ -71,6 +71,15 @@ func Run(ctx context.Context, cfg *config.Config, client xrpc.Client, cache *gli
 			HandleErrors(w, err)
 			return
 		}
+		w.Write(b)
+	})
+	mux.HandleFunc("GET /style.css", func(w http.ResponseWriter, r *http.Request) {
+		b, err := files.ReadFile("style.css")
+		if err != nil {
+			HandleErrors(w, err)
+			return
+		}
+		w.Header().Add("Content-Type", "text/css")
 		w.Write(b)
 	})
 
