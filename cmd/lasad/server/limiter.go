@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"tangled.org/anhgelus.world/lasa/cmd/internal"
 )
 
 type limited struct {
@@ -35,13 +37,13 @@ func (l *Limiter) isLimited(r *http.Request) bool {
 	return ok && tm.time.Unix() > time.Now().Unix()
 }
 
-func (l *Limiter) handle(w *statusWriter, r *http.Request, log *slog.Logger) {
+func (l *Limiter) handle(w *internal.StatusWriter, r *http.Request) {
 	ip, _, _ := strings.Cut(r.RemoteAddr, ":")
-	if w.code != http.StatusNotFound && w.code != http.StatusBadRequest && w.code != http.StatusTooManyRequests {
+	if w.Code != http.StatusNotFound && w.Code != http.StatusBadRequest && w.Code != http.StatusTooManyRequests {
 		return
 	}
 	var level uint = 0
-	if w.code == http.StatusBadRequest {
+	if w.Code == http.StatusBadRequest {
 		level = 1
 	}
 
@@ -58,7 +60,7 @@ func (l *Limiter) handle(w *statusWriter, r *http.Request, log *slog.Logger) {
 	if dur == 0 {
 		return
 	}
-	log.Info("rate limiting", "ip", ip, "for", dur)
+	slog.Info("rate limiting", "ip", ip, "for", dur, "uri", r.RequestURI)
 	tm.time = time.Now().Add(dur)
 
 	go func(l *Limiter, dur time.Duration, tm *limited, ip string) {

@@ -5,13 +5,13 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	glide "github.com/valkey-io/valkey-glide/go/v2"
 	"tangled.org/anhgelus.world/lasa"
+	"tangled.org/anhgelus.world/lasa/cmd/internal"
 	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
 	"tangled.org/anhgelus.world/xrpc"
 )
@@ -74,80 +74,41 @@ func Run(ctx context.Context, cfg *config.Config, client xrpc.Client, cache *gli
 		w.Write(b)
 	})
 
-	return http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), middlewares(mux, ctx))
-}
-
-type statusWriter struct {
-	http.ResponseWriter
-	code int
-}
-
-func (w *statusWriter) WriteHeader(statusCode int) {
-	w.ResponseWriter.WriteHeader(statusCode)
-	w.code = statusCode
-}
-
-func middlewares(h http.Handler, parent context.Context) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	m := internal.NewMux(mux)
+	m.Use(func(next internal.Handler, w *internal.StatusWriter, r *http.Request) {
+		// not found favicon
 		if strings.HasPrefix(r.RequestURI, "/favicon.ico") {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-
+		next(w, r)
+	})
+	m.Use(func(next internal.Handler, w *internal.StatusWriter, r *http.Request) {
 		// timeouts request handling
-		ctx, cancel := context.WithTimeoutCause(parent, 15*time.Second, errors.New("handling timeouts"))
+		ctx, cancel := context.WithTimeoutCause(ctx, 15*time.Second, errors.New("handling timeouts"))
 		defer cancel()
 
 		var cancelCause context.CancelCauseFunc
 		ctx, cancelCause = context.WithCancelCause(ctx)
 		defer cancelCause(errors.New("handling finished"))
 
+		ctx = context.WithValue(ctx, keyCancelCause, cancelCause)
+
+		next(w, r.WithContext(ctx))
+	})
+	m.Use(internal.MiddlewareLog(func(ctx context.Context) context.CancelCauseFunc {
+		return ctx.Value(keyCancelCause).(context.CancelCauseFunc)
+	}, cfg.LogNotFound, cfg.LogBadRequest))
+	m.Use(func(next internal.Handler, w *internal.StatusWriter, r *http.Request) {
+		// rate limits
 		limiter := ctx.Value(keyLimiter).(*Limiter)
-		status := &statusWriter{w, http.StatusOK}
-		log := slog.With("uri", r.RequestURI)
 		if limiter.isLimited(r) {
-			status.WriteHeader(http.StatusTooManyRequests)
-			limiter.handle(status, r, log.With("status", http.StatusTooManyRequests))
+			w.WriteHeader(http.StatusTooManyRequests)
 			return
 		}
-
-		now := time.Now()
-		defer func() {
-			if err := recover(); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				log.Error("panic!", "error", err, "duration", time.Since(now))
-				switch e := err.(type) {
-				case error:
-					cancelCause(e)
-				case string:
-					cancelCause(errors.New(e))
-				default:
-					log.Warn(
-						"cannot set cancel cause, because error type is not supported",
-						"type", fmt.Sprintf("%T", e),
-					)
-				}
-			}
-		}()
-
-		h.ServeHTTP(status, r.WithContext(ctx))
-
-		log = log.With("status", status.code, "duration", time.Since(now))
-		if status.code < 400 {
-			log.Debug("handled")
-		} else if status.code < 500 {
-			cfg := ctx.Value(keyCfg).(*config.Config)
-			level := slog.LevelDebug
-			if (status.code == http.StatusNotFound && cfg.LogNotFound) ||
-				(status.code == http.StatusBadRequest && cfg.LogBadRequest) ||
-				(status.code != http.StatusNotFound && status.code != http.StatusBadRequest) {
-				level = slog.LevelWarn
-			}
-			log.Log(context.Background(), level, "invalid request")
-		} else {
-			log.Error("error while handling request")
-		}
-
-		limiter.handle(status, r, log)
+		next(w, r)
+		limiter.handle(w, r)
 	})
+
+	return http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), m.Handle())
 }
