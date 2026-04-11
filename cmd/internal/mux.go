@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 	"slices"
 	"time"
@@ -93,5 +94,28 @@ func MiddlewareLog(cancelCause func(context.Context) context.CancelCauseFunc, lo
 		} else {
 			log.Error("error while handling request")
 		}
+	}
+}
+
+func MiddlewareHeaders(domain string, cacheDur time.Duration) Middleware {
+	if cacheDur == 0 {
+		cacheDur = 15 * time.Minute
+	}
+	return func(next Handler, w *StatusWriter, r *http.Request) {
+		// prevent tracking
+		w.Header().Add("Referrer-Policy", "strict-origin-when-cross-origin")
+		// prevent iframe
+		w.Header().Add("X-Frame-Options", "deny")
+		// prevent bad content being parsed
+		w.Header().Add("X-Content-Type-Options", "nosniff")
+		w.Header().Add("X-Permitted-Cross-Domain-Policies", "none")
+		// content security, cors & co
+		w.Header().Add("Content-Security-Policy", "default-src 'self' https://*."+domain+"; object-src 'none';")
+		w.Header().Add("Access-Control-Allow-Origin", "https://"+domain)
+		w.Header().Add("Cross-Origin-Resource-Policy", "same-origin")
+		// caching
+		w.Header().Add("Access-Control-Max-Age", fmt.Sprintf("%.0f", math.Floor(cacheDur.Seconds())))
+
+		next(w, r)
 	}
 }

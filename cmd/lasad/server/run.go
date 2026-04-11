@@ -96,6 +96,7 @@ func Run(ctx context.Context, cfg *config.Config, client xrpc.Client, cache *gli
 
 		next(w, r.WithContext(ctx))
 	})
+	m.Use(internal.MiddlewareHeaders(cfg.Domain, dur))
 	m.Use(internal.MiddlewareLog(func(ctx context.Context) context.CancelCauseFunc {
 		return ctx.Value(keyCancelCause).(context.CancelCauseFunc)
 	}, cfg.LogNotFound, cfg.LogBadRequest))
