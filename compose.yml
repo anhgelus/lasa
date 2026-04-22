@@ -1,0 +1,15 @@
+services:
+  lasa:
+    build: .
+    ports:
+      - 8000:8000
+    volumes:
+      - ./config.toml:/etc/lasad.toml
+    depends_on:
+      - valkey
+    dns:
+      # required, otherwise DNS server misbehaving
+      - 8.8.8.8
+      - 8.8.4.4
+  valkey:
+    image: valkey/valkey:alpine
