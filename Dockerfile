@@ -4,9 +4,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN apk add just
+RUN apk add just rust
 
-RUN just build
+RUN GOFLAGS=-tags=musl just build
 
 FROM alpine:latest
 
@@ -14,6 +14,8 @@ WORKDIR /app
 
 # expose default port
 EXPOSE 8000
+
+RUN apk add --no-cache libgcc
 
 COPY --from=builder /app/build/lasad .
 COPY --from=builder /app/build/lasa .

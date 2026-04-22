@@ -19,7 +19,7 @@ lasad - lasa daemon running the webserver
 *lasad* is the lasa daemon running the webserver.
 It generates a RSS or an Atom feed for an ATProto publication.
 
-*lasad* or *lased run* without any commands starts the daemon.
+*lasad* or *lasad run* without any commands starts the daemon.
 
 *lasad gen-config* generates a new config and *overwrites* the current config file.
 
