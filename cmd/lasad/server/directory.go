@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -10,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	glide "github.com/valkey-io/valkey-glide/go/v2"
+	"github.com/redis/go-redis/v9"
 	site "tangled.org/anhgelus.world/goat-site"
 	"tangled.org/anhgelus.world/lasa"
 	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
@@ -19,12 +20,12 @@ import (
 )
 
 type Directory struct {
-	cache    *glide.Client
+	cache    *redis.Client
 	duration time.Duration
 	limiter  *lasa.LimitManyRequests[[]byte]
 }
 
-func NewDirectory(cache *glide.Client, dur time.Duration) *Directory {
+func NewDirectory(cache *redis.Client, dur time.Duration) *Directory {
 	return &Directory{
 		cache:    cache,
 		duration: dur,
@@ -36,27 +37,27 @@ func (d *Directory) fromCache(ctx context.Context, key string) []byte {
 	if d.cache == nil {
 		return nil
 	}
-	resp, err := d.cache.Get(ctx, key)
-	if err != nil || resp.IsNil() {
+	res := d.cache.Get(ctx, key)
+	err := res.Err()
+	if err != nil {
+		if !errors.Is(err, redis.Nil) {
+			slog.Error("cannot fetch key in cache", "key", key)
+		}
 		return nil
 	}
-	return []byte(resp.Value())
+	return []byte(res.Val())
 }
 
 func (d *Directory) toCache(ctx context.Context, key string, b []byte) {
 	if d.cache == nil {
 		return
 	}
-	_, err := d.cache.Set(ctx, key, string(b))
+	err := d.cache.Set(ctx, key, string(b), d.duration).Err()
 	if err != nil {
 		slog.Warn("cannot set bytes in cache", "bytes", b, "error", err)
 		return
 	}
 	slog.Debug("bytes set in cache")
-	_, err = d.cache.Expire(ctx, key, d.duration)
-	if err != nil {
-		slog.Warn("cannot set bytes expire", "bytes", b, "error", err)
-	}
 }
 
 func (d *Directory) Author(ctx context.Context, did *atproto.DID) ([]byte, error) {

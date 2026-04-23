@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	glide "github.com/valkey-io/valkey-glide/go/v2"
+	"github.com/redis/go-redis/v9"
 	site "tangled.org/anhgelus.world/goat-site"
 	"tangled.org/anhgelus.world/xrpc"
 	"tangled.org/anhgelus.world/xrpc/atproto"
@@ -15,7 +15,7 @@ import (
 func NewClient(
 	client *http.Client,
 	resolver *net.Resolver,
-	cache *glide.Client,
+	cache *redis.Client,
 	dur time.Duration,
 	host string,
 ) xrpc.Client {

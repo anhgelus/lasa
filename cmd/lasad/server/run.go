@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	glide "github.com/valkey-io/valkey-glide/go/v2"
+	"github.com/redis/go-redis/v9"
 	"tangled.org/anhgelus.world/lasa"
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
 	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
@@ -26,7 +26,7 @@ type Publication struct {
 	RKey string
 }
 
-func Run(ctx context.Context, cfg *config.Config, client xrpc.Client, cache *glide.Client, dur time.Duration) error {
+func Run(ctx context.Context, cfg *config.Config, client xrpc.Client, cache *redis.Client, dur time.Duration) error {
 	ctx = context.WithValue(ctx, keyCfg, cfg)
 	ctx = context.WithValue(ctx, keyClient, client)
 	ctx = context.WithValue(ctx, keyDir, NewDirectory(cache, dur))

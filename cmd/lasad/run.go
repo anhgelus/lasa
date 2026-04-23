@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	glide "github.com/valkey-io/valkey-glide/go/v2"
+	"github.com/redis/go-redis/v9"
 	"tangled.org/anhgelus.world/lasa"
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
 	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
@@ -45,14 +45,15 @@ func handleRun(args []string) {
 	if err != nil {
 		panic(err)
 	}
-	var cache *glide.Client
+	var cache *redis.Client
 	var dur time.Duration
 	if cfg.Cache != nil {
 		cache, err = cfg.Cache.Connect()
 		if err != nil {
-			panic(err)
+			slog.Error("cannot connect to redis", "error", err)
+			os.Exit(3)
 		}
-		slog.Info("connected to valkey")
+		slog.Info("connected to redis")
 		dur = time.Duration(cfg.Cache.Duration) * time.Minute
 	}
 	client := lasa.NewClient(http.DefaultClient, net.DefaultResolver, cache, dur, cfg.Domain)

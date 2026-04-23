@@ -6,14 +6,14 @@ port = 8000
 # if you want to log HTTP 400 responses
 #log_bad_request = true
 
-# if you are using valkey
+# if you are using redis
 #[cache]
 #host = "localhost"
 #port = 6379
 #db = 0
 #duration = 60 # cache duration in minutes
 
-# if valkey requires auth
+# if redis requires auth
 #[cache.auth]
 #username = ""
 #password = ""

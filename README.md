@@ -38,15 +38,15 @@ just
 just dev
 ```
 
-Starts Valkey in Docker and exposes its port:
+Starts Redis in Docker and exposes its port:
 ```bash
-just valkey
+just redis
 ```
 
 ## Deploy
 
 Lasa is a standalone binary that requires nothing.
-You can use Valkey as a cache.
+You can use Redis as a cache.
 
 ### Building
 

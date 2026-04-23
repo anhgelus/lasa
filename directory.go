@@ -3,22 +3,23 @@ package lasa
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
 
-	glide "github.com/valkey-io/valkey-glide/go/v2"
+	"github.com/redis/go-redis/v9"
 	"tangled.org/anhgelus.world/xrpc/atproto"
 )
 
 type Directory struct {
 	inner    atproto.Directory
-	cache    *glide.Client
+	cache    *redis.Client
 	duration time.Duration
 	limiter  *LimitManyRequests[*atproto.DIDDocument]
 }
 
-func NewDirectory(dir atproto.Directory, cache *glide.Client, dur time.Duration) *Directory {
+func NewDirectory(dir atproto.Directory, cache *redis.Client, dur time.Duration) *Directory {
 	return &Directory{
 		inner:    dir,
 		cache:    cache,
@@ -31,16 +32,21 @@ func (d *Directory) fromCache(ctx context.Context, key string) *atproto.DIDDocum
 	if d.cache == nil {
 		return nil
 	}
-	resp, err := d.cache.Get(ctx, key)
+	res := d.cache.Get(ctx, key)
 	var doc *atproto.DIDDocument
-	if err == nil && !resp.IsNil() {
-		b := resp.Value()
-		err = json.Unmarshal([]byte(b), &doc)
-		if err == nil {
-			return doc
-		} else {
-			slog.Warn("cannot unmarshal cache response into DIDDocument", "resp", b)
+	err := res.Err()
+	if err != nil {
+		if !errors.Is(err, redis.Nil) {
+			slog.Error("cannot fetch key in cache", "key", key)
 		}
+		return nil
+	}
+	b := res.Val()
+	err = json.Unmarshal([]byte(b), &doc)
+	if err == nil {
+		return doc
+	} else {
+		slog.Warn("cannot unmarshal cache response into DIDDocument", "resp", b)
 	}
 	return nil
 }
@@ -54,16 +60,12 @@ func (d *Directory) toCache(ctx context.Context, key string, doc *atproto.DIDDoc
 		slog.Warn("cannot marshal DIDDocument", "document", doc, "error", err)
 		return
 	}
-	_, err = d.cache.Set(ctx, key, string(b))
+	err = d.cache.Set(ctx, key, string(b), d.duration).Err()
 	if err != nil {
 		slog.Warn("cannot set DIDDocument in cache", "document", doc, "error", err)
 		return
 	}
 	slog.Debug("DIDDocument set in cache")
-	_, err = d.cache.Expire(ctx, key, d.duration)
-	if err != nil {
-		slog.Warn("cannot set DIDDocument expire", "document", doc, "error", err)
-	}
 }
 
 func (d *Directory) ResolveHandle(ctx context.Context, h atproto.Handle) (*atproto.DIDDocument, error) {

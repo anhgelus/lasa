@@ -6,10 +6,10 @@ services:
     volumes:
       - ./config.toml:/etc/lasad.toml
     depends_on:
-      - valkey
+      - redis
     dns:
       # required, otherwise DNS server misbehaving
       - 8.8.8.8
       - 8.8.4.4
-  valkey:
-    image: valkey/valkey:alpine
+  redis:
+    image: docker.io/library/redis:alpine

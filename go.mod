@@ -5,13 +5,15 @@ go 1.26.1
 require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/nyttikord/logos v0.1.0
-	github.com/valkey-io/valkey-glide/go/v2 v2.3.1
+	github.com/redis/go-redis/v9 v9.18.0
 	tangled.org/anhgelus.world/goat-site v0.1.3
 	tangled.org/anhgelus.world/xrpc v0.4.0
 )
 
 require (
-	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/net v0.52.0 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
 )

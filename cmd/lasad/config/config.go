@@ -3,11 +3,11 @@ package config
 import (
 	"context"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/BurntSushi/toml"
-	glide "github.com/valkey-io/valkey-glide/go/v2"
-	"github.com/valkey-io/valkey-glide/go/v2/config"
+	"github.com/redis/go-redis/v9"
 )
 
 const DefaultPath = "/etc/lasad.toml"
@@ -35,24 +35,24 @@ type CacheAuth struct {
 	ClientName string `toml:"client_name"`
 }
 
-func (c *Cache) Connect() (*glide.Client, error) {
-	cfg := config.NewClientConfiguration().
-		WithAddress(&config.NodeAddress{Host: c.Host, Port: int(c.Port)})
+func (c *Cache) Connect() (*redis.Client, error) {
+	opts := redis.Options{
+		Addr: c.Host + ":" + strconv.Itoa(int(c.Port)),
+		DB:   int(c.DB),
+	}
 	if c.Auth != nil {
-		if c.Auth.Username != "" {
-			cfg = cfg.WithCredentials(config.NewServerCredentials(c.Auth.Username, c.Auth.Password))
-		} else {
-			cfg = cfg.WithCredentials(config.NewServerCredentialsWithDefaultUsername(c.Auth.Password))
+		if c.Auth.ClientName != "" {
+			opts.ClientName = c.Auth.ClientName
 		}
+		if c.Auth.Username != "" {
+			opts.Username = c.Auth.Username
+		}
+		opts.Password = c.Auth.Password
 	}
-	client, err := glide.NewClient(cfg)
-	if err != nil {
-		return nil, err
-	}
+	client := redis.NewClient(&opts)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err = client.Ping(ctx)
-	return client, err
+	return client, client.Ping(ctx).Err()
 }
 
 func Load(path string) (*Config, error) {

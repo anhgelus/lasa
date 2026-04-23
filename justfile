@@ -1,6 +1,6 @@
 builder := 'go build -ldflags "-s -w"'
 testConfig := '"test.toml"'
-valkey_container := 'valkey'
+redis_container := 'redis'
 
 docker := 'podman'
 
@@ -9,13 +9,14 @@ dev:
     go run ./cmd/lasad/ -c {{testConfig}} -v
 
 dev-docker:
+    {{docker}} compose build
     {{docker}} compose up -d
 
-valkey:
-    {{docker}} run --rm --name {{valkey_container}} -p 6379:6379 -d docker.io/valkey/valkey:alpine
+redis:
+    {{docker}} run --rm --name {{redis_container}} -p 6379:6379 -d docker.io/library/redis:alpine
 
 stop:
-    {{docker}} stop {{valkey_container}}
+    {{docker}} stop {{redis_container}}
 
 build: build-lasa build-lasad
 
