@@ -5,9 +5,15 @@ redis_container := 'redis'
 docker := 'podman'
 docker_profile := 'dev'
 
+repo := 'tangled.org/anhgelus.world/lasa'
+
+# set version
+ldflags_version := '-X ' + repo / 'cmd/internal.Version=' + shell('git describe --tags --long --always || echo "dev-local"')
+ldflags := ldflags_version
+
 dev:
     if [[ ! -f {{testConfig}} ]]; then go run ./cmd/lasad/ gen-config -c {{testConfig}}; fi
-    go run ./cmd/lasad/ -c {{testConfig}} -v
+    go run -ldflags '{{ldflags}}' ./cmd/lasad/ -c {{testConfig}} -v
 
 dev-docker:
     {{docker}} compose --profile {{docker_profile}} build --no-cache
@@ -28,12 +34,12 @@ logs-docker:
 build: build-lasa build-lasad
 
 build-lasa:
-    @{{builder}} -o build/lasa ./cmd/lasa/
+    {{builder}} -ldflags '-s {{ldflags}}' -o build/lasa ./cmd/lasa/
     # do not require building man pages
     -just build-doc lasa
 
 build-lasad:
-    {{builder}} -o build/lasad ./cmd/lasad/
+    {{builder}} -ldflags '-s {{ldflags}}' -o build/lasad ./cmd/lasad/
     # do not require building man pages
     -just build-doc lasad
 
@@ -54,5 +60,5 @@ install: build
 publish-docker registry name tag:
     just build-docker {{registry / name}}:{{tag}}
     {{docker}} tag {{registry / name}}:{{tag}} {{registry / name}}:latest
-    #{{docker}} push {{registry / name}}:{{tag}}
-    #{{docker}} push {{registry / name}}:latest
+    {{docker}} push {{registry / name}}:{{tag}}
+    {{docker}} push {{registry / name}}:latest

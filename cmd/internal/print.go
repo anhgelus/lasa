@@ -13,7 +13,10 @@ import (
 	"tangled.org/anhgelus.world/xrpc/atproto"
 )
 
+var Version string
+
 func Usage(syntax, usage string, commands []Command, flags *flag.FlagSet, examples []string) {
+	fmt.Println(os.Args[0], "version:", Version)
 	fmt.Println("Usage:", syntax)
 	fmt.Println(usage)
 	w := tabwriter.NewWriter(os.Stdout, 0, 2, 1, ' ', 0)
