@@ -21,3 +21,6 @@ testdata
 build
 test.toml
 config/
+
+.git
+*.md

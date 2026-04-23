@@ -19,6 +19,6 @@ COPY --from=builder /app/build/lasad .
 COPY --from=builder /app/build/lasa .
 
 # generate default config file
-RUN /app/lasad gen-config
+RUN mkdir -p /etc/lasad && /app/lasad gen-config -c "/etc/lasad/config.toml"
 
-ENTRYPOINT [ "/app/lasad" ]
+ENTRYPOINT [ "/app/lasad", "-c", "/etc/lasad/config.toml" ]

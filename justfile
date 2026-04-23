@@ -3,20 +3,27 @@ testConfig := '"test.toml"'
 redis_container := 'redis'
 
 docker := 'podman'
+docker_profile := 'dev'
 
 dev:
     if [[ ! -f {{testConfig}} ]]; then go run ./cmd/lasad/ gen-config -c {{testConfig}}; fi
     go run ./cmd/lasad/ -c {{testConfig}} -v
 
 dev-docker:
-    {{docker}} compose build
-    {{docker}} compose --profile dev up -d
+    {{docker}} compose --profile {{docker_profile}} build --no-cache
+    {{docker}} compose --profile {{docker_profile}} up -d
 
 redis:
     {{docker}} run --rm --name {{redis_container}} -p 6379:6379 -d docker.io/library/redis:alpine
 
 stop:
     {{docker}} stop {{redis_container}}
+
+stop-docker:
+    {{docker}} compose --profile {{docker_profile}} down
+
+logs-docker:
+    {{docker}} compose --profile {{docker_profile}} logs
 
 build: build-lasa build-lasad
 

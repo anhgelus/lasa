@@ -4,7 +4,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - ./config.toml:/etc/lasad.toml
+      - ./config/:/etc/lasad/
     depends_on:
       - redis
     dns:
@@ -15,7 +15,7 @@ services:
   lasa:
     image: atcr.io/anhgelus.world/lasa
     volumes:
-      - ./config.toml:/etc/lasad.toml
+      - ./config/:/etc/lasad/
     depends_on:
       - redis
     dns:
