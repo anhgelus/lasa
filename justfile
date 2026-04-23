@@ -10,7 +10,7 @@ dev:
 
 dev-docker:
     {{docker}} compose build
-    {{docker}} compose up -d
+    {{docker}} compose --profile dev up -d
 
 redis:
     {{docker}} run --rm --name {{redis_container}} -p 6379:6379 -d docker.io/library/redis:alpine
@@ -21,7 +21,7 @@ stop:
 build: build-lasa build-lasad
 
 build-lasa:
-    {{builder}} -o build/lasa ./cmd/lasa/
+    @{{builder}} -o build/lasa ./cmd/lasa/
     # do not require building man pages
     -just build-doc lasa
 
@@ -43,3 +43,9 @@ install: build
     -mkdir -p /usr/local/man/man1
     -mv build/lasa.1 /usr/local/man/man1/
     -mv build/lasad.1 /usr/local/man/man1/
+
+publish-docker registry name tag:
+    just build-docker {{registry / name}}:{{tag}}
+    {{docker}} tag {{registry / name}}:{{tag}} {{registry / name}}:latest
+    #{{docker}} push {{registry / name}}:{{tag}}
+    #{{docker}} push {{registry / name}}:latest

@@ -1,5 +1,5 @@
 services:
-  lasa:
+  lasa-dev:
     build: .
     ports:
       - 8000:8000
@@ -11,5 +11,16 @@ services:
       # required, otherwise DNS server misbehaving
       - 8.8.8.8
       - 8.8.4.4
+    profiles: [dev]
+  lasa:
+    image: atcr.io/anhgelus.world/lasa
+    volumes:
+      - ./config.toml:/etc/lasad.toml
+    depends_on:
+      - redis
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    profiles: [prod]
   redis:
     image: docker.io/library/redis:alpine

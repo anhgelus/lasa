@@ -66,16 +66,32 @@ Read `lasa(1)` for more information.
 You must have **scdoc** installed to build the man pages.
 If scdoc is not installed, it skips the building.
 
-You can use
-```bash
-just build-docker localhost/lasa
-```
-to build the Dockerfile containing `lasa` and `lasad`.
-You can replace `localhost/lasa` by the name of the image.
-
 ### Installing
 
 Building and installing binaries and man pages to `/usr/local/`:
 ```bash
 just install
 ```
+
+### Docker
+
+Lasa can be used easily with Docker.
+
+You can build the Docker image containing `lasa` and `lasad` with:
+```bash
+just build-docker localhost/lasa
+```
+where `localhost/lasa` by the name of the image.
+
+You can start the compose file in dev mode with:
+```bash
+just dev-docker
+```
+
+You can deploy the container in production by copying the `compose.yml` and running:
+```bash
+docker compose --profile prod up -d
+# if you use podman
+podman compose --profile prod up -d
+```
+It will use the official image [`anhgelus.world/lasa`](https://atcr.io/r/anhgelus.world/lasa) hosted on ATCR.
