@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN apk add just
+RUN apk add just git
 
 RUN just build
 
