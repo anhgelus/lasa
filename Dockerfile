@@ -21,6 +21,7 @@ LABEL org.opencontainers.image.source='https://tangled.org/anhgelus.world/lasa'
 LABEL org.opencontainers.image.url='https://tangled.org/anhgelus.world/lasa'
 LABEL org.opencontainers.image.licenses='AGPL-3-only'
 
+COPY README.md .
 COPY --from=builder /app/build/lasad .
 COPY --from=builder /app/build/lasa .
 
