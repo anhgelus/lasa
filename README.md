@@ -3,6 +3,8 @@
 Lasa is a stateless proxy that generates a RSS or an Atom feed from a [Standard.site](https://standard.site) 
 publication.
 
+Try it at [https://lasa.anhgelus.world](https://lasa.anhgelus.world)! 
+
 ## Usage
 
 To list publications from an account:
