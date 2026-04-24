@@ -8,7 +8,7 @@ docker_profile := 'dev'
 repo := 'tangled.org/anhgelus.world/lasa'
 
 # set version
-ldflags_version := '-X ' + repo / 'cmd/internal.Version=' + shell('git describe --tags --long --always || echo "dev-local"')
+ldflags_version := '-X ' + repo / 'cmd/internal.Version=' + shell('git describe --tags --always || echo "dev-local"')
 ldflags := ldflags_version
 
 dev:

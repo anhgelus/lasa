@@ -15,6 +15,12 @@ WORKDIR /app
 # expose default port
 EXPOSE 8000
 
+LABEL org.opencontainers.image.title='Lasa'
+LABEL org.opencontainers.image.description='Stateless proxy that generates a RSS or an Atom feed from a Standard.site publication'
+LABEL org.opencontainers.image.source='https://tangled.org/anhgelus.world/lasa'
+LABEL org.opencontainers.image.url='https://tangled.org/anhgelus.world/lasa'
+LABEL org.opencontainers.image.licenses='AGPL-3-only'
+
 COPY --from=builder /app/build/lasad .
 COPY --from=builder /app/build/lasa .
 
