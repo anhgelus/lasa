@@ -50,6 +50,8 @@ just redis
 Lasa is a standalone binary that requires nothing.
 You can use Redis as a cache.
 
+Check [DEPLOYMENT.md](./DEPLOYMENT.md) for more information.
+
 ### Building
 
 Building binaries:

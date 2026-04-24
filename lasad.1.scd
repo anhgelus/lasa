@@ -10,9 +10,9 @@ lasad - lasa daemon running the webserver
 
 *lasad* [*-c* _path/to/config_]
 
-*lasad* run [*-c* _path/tp/config_]
+*lasad* run [*-c* _path/to/config_]
 
-*lasad* gen-config [*-c* _path/tp/config_]
+*lasad* gen-config [*-c* _path/to/config_]
 
 # DESCRIPTION
 
