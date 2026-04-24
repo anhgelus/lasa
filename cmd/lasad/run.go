@@ -40,7 +40,7 @@ func handleRun(args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	slog.Info("loading config", "path", configPath)
+	slog.Info("loading config", "path", configPath, "version", internal.Version)
 	cfg, err := config.Load(configPath)
 	if err != nil {
 		panic(err)
