@@ -51,23 +51,57 @@ The exposed port is `8000`.
 
 ## Configuration
 
-The config file only requires two informations: the port and the domain (for security headers).
+The config file only requires two informations: how to listen and the domain (for security headers).
 ```toml
 domain = "lasa.example.org"
-port = 8000
+
+[listen]
+tcp = ":8000"
 ```
 
 You can specify the legal notice with
 ```toml
+...
 legal_notice_url = "https://example.org/legal"
+
+[listen]
+...
 ```
 
 If you want to log 400 and 404 as warning, uncomment these lines:
 ```toml
+...
 # if you want to log HTTP 404 responses
 log_not_found = true
 # if you want to log HTTP 400 responses
 log_bad_request = true
+
+[listen]
+...
+```
+
+### Listen
+
+Lasa can listen to an address or with a UNIX socket.
+The `tcp` option set the address and `unix` option set the path to the UNIX socket.
+```toml
+[listen]
+# listen to localhost on port 8000
+tcp = "127.0.0.1:8000"
+# listen to every address on port 8000
+tcp = ":8000"
+```
+```
+[listen]
+# listen to this UNIX socket
+unix = "/run/lasad.sock"
+```
+
+If you prefer, you can use FastCGI instead of HTTP:
+```toml
+[listen]
+...
+fastcgi = true
 ```
 
 ### Redis

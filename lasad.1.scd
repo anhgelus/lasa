@@ -42,6 +42,8 @@ The configuration file is a TOML file.
 *cache section* contains information to connect to a _Valkey_ database.
 *cache.auth subsection* is used to provide login information.
 
+*listen section* is used to configure how *lasad* is connected to the external world.
+
 # SEE ALSO
 
 _lasa_(1)
