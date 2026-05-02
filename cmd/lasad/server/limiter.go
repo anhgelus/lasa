@@ -38,14 +38,7 @@ func (l *Limiter) isLimited(r *http.Request) bool {
 }
 
 func (l *Limiter) handle(w *ljus.StatusWriter, r *http.Request) {
-	addr := r.Header.Get("X-Real-Ip")
-	if addr == "" {
-		addr = r.Header.Get("X-Forwarded-For")
-	}
-	if addr == "" {
-		addr = r.RemoteAddr
-	}
-	ip, _, _ := strings.Cut(addr, ":")
+	ip, _, _ := strings.Cut(r.RemoteAddr, ":")
 	if w.Code != http.StatusNotFound && w.Code != http.StatusBadRequest && w.Code != http.StatusTooManyRequests {
 		return
 	}

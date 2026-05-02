@@ -16,6 +16,7 @@ import (
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
 	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
 	"tangled.org/anhgelus.world/lasa/cmd/lasad/server"
+	"tangled.org/anhgelus.world/ljus"
 )
 
 func handleRunHelp() {
@@ -82,6 +83,17 @@ func handleRun(args []string) {
 		if cfg.Listen.FastCGI {
 			ch <- fcgi.Serve(l, s.Handler())
 		} else {
+			s.Use(func(next ljus.Handler, w *ljus.StatusWriter, r *http.Request) {
+				addr := r.Header.Get("X-Real-Ip")
+				if addr == "" {
+					addr = r.Header.Get("X-Forwarded-For")
+				}
+				if addr == "" {
+					addr = r.RemoteAddr
+				}
+				r.RemoteAddr = addr
+				next(w, r)
+			})
 			ch <- http.Serve(l, s.Handler())
 		}
 	}()
