@@ -70,6 +70,12 @@ func handleRun(args []string) {
 		var l net.Listener
 		if cfg.Listen.Unix != nil {
 			l, err = net.Listen("unix", *cfg.Listen.Unix)
+			defer func() {
+				err := os.Remove(*cfg.Listen.Unix)
+				if err != nil {
+					slog.Error("cannot delete socket", "path", *cfg.Listen.Unix)
+				}
+			}()
 		} else {
 			l, err = net.Listen("tcp", *cfg.Listen.TCP)
 		}
