@@ -32,5 +32,7 @@ pgregory.net/rapid v1.2.0 h1:keKAYRcjm+e1F0oAuU5F5+YPAWcyxNNRK2wud503Gnk=
 pgregory.net/rapid v1.2.0/go.mod h1:PY5XlDGj0+V1FCq0o192FdRhpKHGTRIWBgqjDBTrq04=
 tangled.org/anhgelus.world/goat-site v0.1.3 h1:TMwjKzOEeiJCTjH8qELZ1zG7C51UVbIKFgH3qdBMLQc=
 tangled.org/anhgelus.world/goat-site v0.1.3/go.mod h1:/JOfXaSOhE/xwLoA1bJ6Nfi9hmYP+8tFa7CTNzG92SU=
+tangled.org/anhgelus.world/ljus v0.1.0 h1:9BrFQsCLCij8v+YDm1Y9foStd5MR+NDcNtEXD6xow4k=
+tangled.org/anhgelus.world/ljus v0.1.0/go.mod h1:/CN+a8MYyvUArsPUDhtfajjISA6V0hsAfIcCcQEIo4o=
 tangled.org/anhgelus.world/xrpc v0.4.0 h1:Khf8/9I8J6IV1KLqLrqf9a1X6QJUQN3dXjcLZGp2zRg=
 tangled.org/anhgelus.world/xrpc v0.4.0/go.mod h1:DW43uo9DKZHVN9fiH6lAYVQ+0cfSLoceo7aE5lE1jjw=

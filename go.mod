@@ -7,6 +7,7 @@ require (
 	github.com/nyttikord/logos v0.1.0
 	github.com/redis/go-redis/v9 v9.18.0
 	tangled.org/anhgelus.world/goat-site v0.1.3
+	tangled.org/anhgelus.world/ljus v0.1.0
 	tangled.org/anhgelus.world/xrpc v0.4.0
 )
 

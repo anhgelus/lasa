@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/fcgi"
 	"os"
 	"os/signal"
 	"syscall"
@@ -62,7 +63,27 @@ func handleRun(args []string) {
 
 	go func() {
 		slog.Info("starting")
-		ch <- server.Run(ctx, cfg, client, cache, dur)
+		if cfg.Listen.TCP == nil && cfg.Listen.Unix == nil {
+			panic("no listen address set")
+		}
+		var l net.Listener
+		if cfg.Listen.Unix != nil {
+			l, err = net.Listen("unix", *cfg.Listen.Unix)
+		} else {
+			l, err = net.Listen("tcp", *cfg.Listen.TCP)
+		}
+		if err != nil {
+			panic(err)
+		}
+		s, err := server.New(ctx, cfg, client, cache, dur)
+		if err != nil {
+			panic(err)
+		}
+		if cfg.Listen.FastCGI {
+			ch <- fcgi.Serve(l, s.Handler())
+		} else {
+			ch <- http.Serve(l, s.Handler())
+		}
 	}()
 	select {
 	case <-ctx.Done():

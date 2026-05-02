@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"tangled.org/anhgelus.world/lasa/cmd/internal"
+	"tangled.org/anhgelus.world/ljus"
 )
 
 type limited struct {
@@ -37,7 +37,7 @@ func (l *Limiter) isLimited(r *http.Request) bool {
 	return ok && tm.time.Unix() > time.Now().Unix()
 }
 
-func (l *Limiter) handle(w *internal.StatusWriter, r *http.Request) {
+func (l *Limiter) handle(w *ljus.StatusWriter, r *http.Request) {
 	addr := r.Header.Get("X-Real-Ip")
 	if addr == "" {
 		addr = r.Header.Get("X-Forwarded-For")

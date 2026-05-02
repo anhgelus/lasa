@@ -20,4 +20,4 @@ go.work*
 testdata
 build
 test.toml
-config/
+/config/

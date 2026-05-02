@@ -1,10 +1,16 @@
 domain = "example.org"
-port = 8000
 #legal_notice_url = "https://example.org/legal"
 # if you want to log HTTP 404 responses
 #log_not_found = true
 # if you want to log HTTP 400 responses
 #log_bad_request = true
+
+[listen]
+tcp = ":8000"
+# if you want to use a unix socket instead
+#unix = "/run/lasad.sock"
+# if you want to use FastCGI instead of HTTP
+#fastcgi = true
 
 # if you are using redis
 #[cache]

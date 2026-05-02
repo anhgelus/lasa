@@ -6,10 +6,8 @@ import (
 	"os"
 
 	"tangled.org/anhgelus.world/lasa/cmd/internal"
+	"tangled.org/anhgelus.world/lasa/cmd/lasad/config"
 )
-
-//go:embed default.toml
-var defaultConfig []byte
 
 func handleGenConfigHelp() {
 	internal.Usage(
@@ -32,7 +30,7 @@ func handleGenConfig(args []string) {
 		return
 	}
 	fmt.Println("writing default file at", configPath)
-	err := os.WriteFile(configPath, defaultConfig, 0640)
+	err := os.WriteFile(configPath, config.DefaultConfig, 0640)
 	if err != nil {
 		panic(err)
 	}

@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	_ "embed"
 	"os"
 	"strconv"
 	"time"
@@ -12,13 +13,22 @@ import (
 
 const DefaultPath = "/etc/lasad.toml"
 
+//go:embed default.toml
+var DefaultConfig []byte
+
 type Config struct {
 	Domain        string  `toml:"domain"`
-	Port          uint    `toml:"port"`
-	Cache         *Cache  `toml:"cache"`
 	LegalNotice   *string `toml:"legal_notice_url"`
 	LogNotFound   bool    `toml:"log_not_found"`
 	LogBadRequest bool    `toml:"log_bad_request"`
+	Listen        Listen  `toml:"listen"`
+	Cache         *Cache  `toml:"cache"`
+}
+
+type Listen struct {
+	TCP     *string `toml:"tcp"`
+	Unix    *string `toml:"unix"`
+	FastCGI bool    `toml:"fastcgi"`
 }
 
 type Cache struct {
