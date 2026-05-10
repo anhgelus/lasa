@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log/slog"
+	"log/syslog"
 	"os"
 
 	"github.com/nyttikord/logos"
@@ -15,6 +16,7 @@ var (
 	help       = false
 	verbose    = false
 	noColor    = false
+	useSyslog  = false
 	configPath = config.DefaultPath
 )
 
@@ -24,6 +26,7 @@ func init() {
 	flags.BoolVar(&verbose, "v", verbose, "increase verbosity")
 	flags.BoolVar(&noColor, "no-color", noColor, "disable colors")
 	flags.StringVar(&configPath, "c", configPath, "path to the config")
+	flags.BoolVar(&useSyslog, "syslog", useSyslog, "log to syslog instead of stdout")
 }
 
 var commands = []internal.Command{
@@ -41,7 +44,17 @@ func main() {
 	if verbose {
 		logOpts.Level = slog.LevelDebug
 	}
-	slog.SetDefault(slog.New(logos.New(os.Stdout, logOpts)))
+	var l *logos.Logos
+	if !useSyslog {
+		l = logos.NewColor(os.Stdout, logOpts)
+	} else {
+		var err error
+		l, err = logos.NewSyslog("lasad", syslog.LOG_DAEMON, logOpts)
+		if err != nil {
+			panic(err)
+		}
+	}
+	slog.SetDefault(slog.New(l))
 	args := flags.Args()
 	command := "run"
 	if len(args) > 0 {

@@ -31,6 +31,8 @@ It generates a RSS or an Atom feed for an ATProto publication.
 
 *-no-color* disables colors in logs.
 
+*-syslog* logs to _syslog_(3) instead of stdout. The facility is *daemon* with ident *lasad*.
+
 *-h* prints the help.
 
 # CONFIGURATION

@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/BurntSushi/toml v1.6.0
-	github.com/nyttikord/logos v0.1.0
+	github.com/nyttikord/logos v0.2.0
 	github.com/redis/go-redis/v9 v9.18.0
 	tangled.org/anhgelus.world/goat-site v0.1.3
 	tangled.org/anhgelus.world/ljus v0.1.0
